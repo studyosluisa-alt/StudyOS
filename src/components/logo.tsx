@@ -9,7 +9,7 @@ export const Logo = ({
 }) => {
   return (
     <img
-      src="/logo.jpeg"
+      src="/logo.png"
       alt="StudyOS"
       className={`object-contain ${className}`}
     />
