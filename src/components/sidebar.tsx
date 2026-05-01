@@ -50,6 +50,10 @@ const routes = [
   },
 ]
 
+import { Logo } from "@/components/logo"
+
+// ...
+
 export function Sidebar() {
   const pathname = usePathname()
   const { setTheme, theme } = useTheme()
@@ -60,7 +64,8 @@ export function Sidebar() {
     <div className="space-y-4 py-4 flex flex-col h-full bg-[#111827] text-white">
       <div className="px-3 py-2 flex-1">
         <Link href="/dashboard" className="flex items-center pl-3 mb-14">
-          <h1 className="text-2xl font-bold">
+          <Logo className="h-10 w-10" />
+          <h1 className="text-2xl font-bold ml-3">
             Study<span className="text-sky-500">OS</span>
           </h1>
         </Link>

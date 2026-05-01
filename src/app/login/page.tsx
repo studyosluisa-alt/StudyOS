@@ -1,116 +1,142 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { GraduationCap, Mail, Lock, Loader2, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from "react"
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { Mail, Lock, Loader2, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
+import Link from "next/link"
+import { Logo } from "@/components/logo"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
       const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
-      });
+      })
 
       if (result?.error) {
-        toast.error("E-mail ou senha incorretos");
+        toast.error("E-mail ou senha incorretos")
       } else {
-        toast.success("Bem-vindo de volta!");
-        router.push("/dashboard");
-        router.refresh();
+        toast.success("Login realizado com sucesso!")
+        router.push("/dashboard")
+        router.refresh()
       }
     } catch (error) {
-      toast.error("Ocorreu um erro ao entrar");
+      toast.error("Ocorreu um erro ao tentar entrar")
     } finally {
-      setIsLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#1a1a1a,0%,#0a0a0a_100%)]" />
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+      
+      {/* Ambient Lights */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-sky-500/10 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full" />
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="flex flex-col items-center mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
-          <div className="w-16 h-16 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl mb-4 rotate-3">
-            <GraduationCap className="text-white w-10 h-10" />
-          </div>
-          <h1 className="text-4xl font-bold text-white tracking-tight">Study<span className="text-blue-500">OS</span></h1>
-          <p className="text-muted-foreground mt-2">Sua jornada de estudos começa aqui</p>
+      <div className="relative z-10 w-full max-w-[400px] px-6">
+        <div className="flex flex-col items-center mb-10">
+          <Logo className="h-20 w-20 mb-4" />
+          <h1 className="text-4xl font-bold tracking-tight text-white mb-2">
+            Study<span className="text-sky-400">OS</span>
+          </h1>
+          <p className="text-zinc-400 font-medium text-sm tracking-wide">
+            Sua jornada de estudos começa aqui
+          </p>
         </div>
 
-        <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        <div className="bg-[#141414]/80 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-400 ml-1">E-mail</label>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">
+                E-mail
+              </label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-blue-500 transition-colors" />
-                <input
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-zinc-600 group-focus-within:text-sky-400 transition-colors" />
+                </div>
+                <Input
                   type="email"
+                  placeholder="seu@email.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  className="w-full bg-zinc-800/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner"
+                  className="pl-10 bg-black/40 border-white/5 text-white h-12 rounded-xl focus:border-sky-500/50 focus:ring-sky-500/20 transition-all placeholder:text-zinc-700"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-400 ml-1">Senha</label>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">
+                Senha
+              </label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-blue-500 transition-colors" />
-                <input
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-zinc-600 group-focus-within:text-purple-400 transition-colors" />
+                </div>
+                <Input
                   type="password"
+                  placeholder="••••••••"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-zinc-800/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner"
+                  className="pl-10 bg-black/40 border-white/5 text-white h-12 rounded-xl focus:border-purple-500/50 focus:ring-purple-500/20 transition-all placeholder:text-zinc-700"
                 />
               </div>
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold py-4 rounded-2xl shadow-xl shadow-blue-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
+              disabled={loading}
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-bold text-lg shadow-lg shadow-sky-500/20 transition-all active:scale-[0.98]"
             >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <>
-                  Entrar no Dashboard
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </>
+                <div className="flex items-center justify-center gap-2">
+                  Entrar
+                  <ArrowRight className="h-5 w-5" />
+                </div>
               )}
-            </button>
-          </form>
-
-          <div className="mt-8 text-center pt-6 border-t border-white/5">
-            <p className="text-zinc-500">
-              Não tem uma conta?{" "}
-              <Link href="/register" className="text-blue-500 hover:text-blue-400 font-medium transition-colors">
-                Criar conta gratuita
+            </Button>
+            
+            <div className="flex justify-center">
+              <Link href="#" className="text-xs text-zinc-500 hover:text-white transition-colors">
+                Esqueceu a senha?
               </Link>
-            </p>
-          </div>
+            </div>
+          </form>
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-sm text-zinc-500">
+            Não tem uma conta?{" "}
+            <Link 
+              href="/register" 
+              className="text-sky-400 font-semibold hover:text-sky-300 transition-colors"
+            >
+              Criar conta gratuita
+            </Link>
+          </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

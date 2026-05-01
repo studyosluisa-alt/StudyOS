@@ -7,6 +7,8 @@ import { Sidebar } from "@/components/sidebar"
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 
+import { Logo } from "@/components/logo"
+
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
@@ -18,7 +20,8 @@ export function MobileNav() {
 
   return (
     <div className="md:hidden flex items-center justify-between w-full p-4 border-b bg-background z-50">
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
+        <Logo className="h-8 w-8" />
         <h1 className="text-xl font-bold">
           Study<span className="text-sky-500">OS</span>
         </h1>

@@ -1,132 +1,154 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { GraduationCap, Mail, Lock, User, Loader2, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { User, Mail, Lock, Loader2, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
+import Link from "next/link"
+import { Logo } from "@/components/logo"
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
       const response = await fetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
-      });
+        headers: { "Content-Type": "application/json" }
+      })
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        toast.error(data.error || "Erro ao criar conta");
+      if (response.ok) {
+        toast.success("Conta criada com sucesso!")
+        router.push("/login")
       } else {
-        toast.success("Conta criada com sucesso! Faça login.");
-        router.push("/login");
+        const data = await response.json()
+        toast.error(data.error || "Erro ao criar conta")
       }
     } catch (error) {
-      toast.error("Ocorreu um erro ao registrar");
+      toast.error("Erro na conexão")
     } finally {
-      setIsLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Orbs */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#1a1a1a,0%,#0a0a0a_100%)]" />
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+      
+      {/* Ambient Lights */}
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-sky-500/10 blur-[120px] rounded-full" />
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="flex flex-col items-center mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
-          <div className="w-16 h-16 bg-gradient-to-tr from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl mb-4 -rotate-3">
-            <GraduationCap className="text-white w-10 h-10" />
-          </div>
-          <h1 className="text-4xl font-bold text-white tracking-tight">Criar <span className="text-purple-500">Conta</span></h1>
-          <p className="text-muted-foreground mt-2">Junte-se à elite dos estudantes</p>
+      <div className="relative z-10 w-full max-w-[400px] px-6">
+        <div className="flex flex-col items-center mb-10">
+          <Logo className="h-16 w-16 mb-4" />
+          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+            Criar Conta
+          </h1>
+          <p className="text-zinc-400 font-medium text-sm tracking-wide">
+            Comece sua jornada no StudyOS hoje
+          </p>
         </div>
 
-        <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        <div className="bg-[#141414]/80 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-400 ml-1">Nome Completo</label>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">
+                Nome Completo
+              </label>
               <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-purple-500 transition-colors" />
-                <input
-                  type="text"
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-zinc-600 group-focus-within:text-sky-400 transition-colors" />
+                </div>
+                <Input
+                  placeholder="Seu nome"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Seu nome"
-                  className="w-full bg-zinc-800/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all shadow-inner"
+                  className="pl-10 bg-black/40 border-white/5 text-white h-12 rounded-xl focus:border-sky-500/50 focus:ring-sky-500/20 transition-all placeholder:text-zinc-700"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-400 ml-1">E-mail</label>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">
+                E-mail
+              </label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-purple-500 transition-colors" />
-                <input
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-zinc-600 group-focus-within:text-sky-400 transition-colors" />
+                </div>
+                <Input
                   type="email"
+                  placeholder="seu@email.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  className="w-full bg-zinc-800/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all shadow-inner"
+                  className="pl-10 bg-black/40 border-white/5 text-white h-12 rounded-xl focus:border-sky-500/50 focus:ring-sky-500/20 transition-all placeholder:text-zinc-700"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-400 ml-1">Senha</label>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">
+                Senha
+              </label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-purple-500 transition-colors" />
-                <input
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-zinc-600 group-focus-within:text-purple-400 transition-colors" />
+                </div>
+                <Input
                   type="password"
+                  placeholder="••••••••"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-zinc-800/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all shadow-inner"
+                  className="pl-10 bg-black/40 border-white/5 text-white h-12 rounded-xl focus:border-purple-500/50 focus:ring-purple-500/20 transition-all placeholder:text-zinc-700"
                 />
               </div>
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold py-4 rounded-2xl shadow-xl shadow-purple-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
+              disabled={loading}
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-sky-500 to-purple-600 hover:from-sky-400 hover:to-purple-500 text-white font-bold text-lg shadow-lg shadow-sky-500/20 transition-all active:scale-[0.98]"
             >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <>
+                <div className="flex items-center justify-center gap-2">
                   Criar minha conta
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </>
+                  <ArrowRight className="h-5 w-5" />
+                </div>
               )}
-            </button>
+            </Button>
           </form>
+        </div>
 
-          <div className="mt-8 text-center pt-6 border-t border-white/5">
-            <p className="text-zinc-500">
-              Já tem uma conta?{" "}
-              <Link href="/login" className="text-purple-500 hover:text-purple-400 font-medium transition-colors">
-                Fazer login
-              </Link>
-            </p>
-          </div>
+        <div className="mt-8 text-center">
+          <p className="text-sm text-zinc-500">
+            Já tem uma conta?{" "}
+            <Link 
+              href="/login" 
+              className="text-purple-400 font-semibold hover:text-purple-300 transition-colors"
+            >
+              Entrar agora
+            </Link>
+          </p>
         </div>
       </div>
     </div>
-  );
+  )
 }
