@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     // 1. Validação de esquema (Zod)
     const validation = passwordSchema.safeParse(body)
     if (!validation.success) {
-      const errorMessage = validation.error.errors[0].message
+      const errorMessage = validation.error.issues[0].message
       return new NextResponse(errorMessage, { status: 400 })
     }
 
