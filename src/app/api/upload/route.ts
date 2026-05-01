@@ -1,13 +1,9 @@
-import { NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { auth } from "@/auth";
 
 export async function POST(request: Request) {
+  const session = await auth();
+  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
@@ -19,12 +15,12 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Upload to Cloudinary
+    // Upload to Cloudinary with user-specific folder
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: "studyos_uploads",
-          resource_type: "auto", // Handles PDFs, images, etc.
+          folder: `studyos_uploads/${session.user.id}`,
+          resource_type: "auto",
         },
         (error, result) => {
           if (error) reject(error);

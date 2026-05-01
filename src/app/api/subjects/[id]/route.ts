@@ -1,14 +1,19 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await auth();
+  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+
   try {
     const { id } = await params;
-    const subject = await prisma.subject.findUnique({
-      where: { id },
+    const subject = await prisma.subject.findFirst({
+      where: { 
+        id,
+        userId: session.user.id
+      },
       include: {
         materials: true,
         flashcards: true,
@@ -31,17 +36,29 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await auth();
+  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+
   try {
     const { id } = await params;
     const body = await request.json();
     const { name, color } = body;
 
-    const subject = await prisma.subject.update({
+    // Verify ownership before update
+    const subject = await prisma.subject.findFirst({
+      where: { id, userId: session.user.id }
+    });
+
+    if (!subject) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const updatedSubject = await prisma.subject.update({
       where: { id },
       data: { name, color },
     });
 
-    return NextResponse.json(subject);
+    return NextResponse.json(updatedSubject);
   } catch (error: any) {
     console.error("[SUBJECT_PATCH_ERROR]:", error);
     return NextResponse.json({ error: "Erro ao atualizar matéria" }, { status: 500 });
@@ -52,8 +69,21 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await auth();
+  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+
   try {
     const { id } = await params;
+
+    // Verify ownership before delete
+    const subject = await prisma.subject.findFirst({
+      where: { id, userId: session.user.id }
+    });
+
+    if (!subject) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     await prisma.subject.delete({
       where: { id },
     });
