@@ -139,6 +139,17 @@
   border-color: var(--primary) !important;
 }
 
+/* Utility to hide scrollbars while allowing scroll */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 /* Force browser autofill to respect our dark theme */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

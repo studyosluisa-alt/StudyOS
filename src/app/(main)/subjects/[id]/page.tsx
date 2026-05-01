@@ -238,10 +238,25 @@ export default function SubjectDetailsPage({ params }: { params: Promise<{ id: s
       </div>
 
       <Tabs defaultValue="materials" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-xl">
-          <TabsTrigger value="materials">Materiais</TabsTrigger>
-          <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
-          <TabsTrigger value="questions">Questões (Tarefas)</TabsTrigger>
+        <TabsList className="inline-flex w-full md:w-auto h-auto p-1 bg-muted/50 rounded-xl overflow-x-auto no-scrollbar gap-1">
+          <TabsTrigger 
+            value="materials" 
+            className="flex-1 md:flex-none px-4 py-2.5 text-sm font-medium rounded-lg whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            Materiais
+          </TabsTrigger>
+          <TabsTrigger 
+            value="flashcards" 
+            className="flex-1 md:flex-none px-4 py-2.5 text-sm font-medium rounded-lg whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            Flashcards
+          </TabsTrigger>
+          <TabsTrigger 
+            value="questions" 
+            className="flex-1 md:flex-none px-4 py-2.5 text-sm font-medium rounded-lg whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            Questões (Tarefas)
+          </TabsTrigger>
         </TabsList>
         
         {/* Materiais Tab */}
