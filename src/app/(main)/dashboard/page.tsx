@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { OverviewChart, DistributionChart } from "@/components/charts";
 import { auth } from "@/auth";
+import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
