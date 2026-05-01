@@ -21,7 +21,7 @@ export default async function DashboardPage() {
   const todaySessions = await prisma.studySession.findMany({
     where: { startTime: { gte: startOfToday } }
   });
-  const todaySeconds = todaySessions.reduce((acc, s) => acc + s.duration, 0);
+  const todaySeconds = todaySessions.reduce((acc: number, s) => acc + s.duration, 0);
   const hrsToday = Math.floor(todaySeconds / 3600);
   const minsToday = Math.floor((todaySeconds % 3600) / 60);
 
@@ -30,7 +30,7 @@ export default async function DashboardPage() {
     where: { startTime: { gte: startOfWeek } },
     include: { subject: true }
   });
-  const weekSeconds = weekSessions.reduce((acc, s) => acc + s.duration, 0);
+  const weekSeconds = weekSessions.reduce((acc: number, s) => acc + s.duration, 0);
   const hrsWeek = Math.floor(weekSeconds / 3600);
   const minsWeek = Math.floor((weekSeconds % 3600) / 60);
 
@@ -71,7 +71,7 @@ export default async function DashboardPage() {
     distributionMap.set(session.subjectId, data);
   });
   
-  const totalDuration = Array.from(distributionMap.values()).reduce((acc, curr) => acc + curr.value, 0);
+  const totalDuration = Array.from(distributionMap.values()).reduce((acc: number, curr) => acc + curr.value, 0);
   const pieData = Array.from(distributionMap.values()).map(d => ({
     ...d,
     value: totalDuration > 0 ? Math.round((d.value / totalDuration) * 100) : 0
