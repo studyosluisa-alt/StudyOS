@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
@@ -8,7 +8,8 @@ import {
   Palette,
   Cloud,
   ShieldCheck,
-  Loader2
+  Loader2,
+  Info
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useState } from "react"
@@ -35,10 +36,6 @@ export default function SettingsPage() {
       return toast.error("As novas senhas não coincidem")
     }
 
-    if (newPassword.length < 6) {
-      return toast.error("A nova senha deve ter pelo menos 6 caracteres")
-    }
-
     setLoading(true)
 
     try {
@@ -48,14 +45,15 @@ export default function SettingsPage() {
         body: JSON.stringify({ currentPassword, newPassword }),
       })
 
+      const message = await res.text()
+
       if (res.ok) {
         toast.success("Senha alterada com sucesso!")
         setCurrentPassword("")
         setNewPassword("")
         setConfirmPassword("")
       } else {
-        const error = await res.text()
-        toast.error(error || "Erro ao alterar senha")
+        toast.error(message || "Erro ao alterar senha")
       }
     } catch (error) {
       toast.error("Ocorreu um erro inesperado")
@@ -105,9 +103,12 @@ export default function SettingsPage() {
               <ShieldCheck className="h-5 w-5 text-purple-500" />
               <CardTitle>Segurança</CardTitle>
             </div>
+            <CardDescription>
+              Atualize sua senha periodicamente para manter sua conta protegida.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleChangePassword} className="space-y-4">
+            <form onSubmit={handleChangePassword} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Senha Atual</label>
@@ -137,6 +138,20 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg border border-border flex gap-3 items-start">
+                <Info className="h-5 w-5 text-purple-500 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Requisitos de Segurança</p>
+                  <ul className="text-xs text-muted-foreground grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 list-disc list-inside">
+                    <li>Mínimo de 8 caracteres</li>
+                    <li>Pelo menos uma letra maiúscula</li>
+                    <li>Pelo menos um número</li>
+                    <li>Pelo menos um caractere especial (!@#$%)</li>
+                  </ul>
+                </div>
+              </div>
+
               <Button type="submit" disabled={loading} className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Atualizar Senha
