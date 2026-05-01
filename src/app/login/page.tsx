@@ -68,7 +68,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-sky-500/50 focus:ring-0 transition-all placeholder:text-zinc-800"
+                  className="pl-12 bg-[#0d0d0d] !bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-sky-500/50 focus:ring-0 transition-all placeholder:text-zinc-800 [color-scheme:dark] [&:-webkit-autofill]:shadow-[0_0_0_30px_#0d0d0d_inset] [&:-webkit-autofill]:text-fill-white"
                 />
               </div>
             </div>
@@ -87,7 +87,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-purple-500/50 focus:ring-0 transition-all placeholder:text-zinc-800"
+                  className="pl-12 bg-[#0d0d0d] !bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-purple-500/50 focus:ring-0 transition-all placeholder:text-zinc-800 [color-scheme:dark] [&:-webkit-autofill]:shadow-[0_0_0_30px_#0d0d0d_inset] [&:-webkit-autofill]:text-fill-white"
                 />
               </div>
             </div>
