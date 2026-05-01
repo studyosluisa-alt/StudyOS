@@ -95,7 +95,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="relative overflow-hidden border-sky-500/20 bg-gradient-to-br from-card to-sky-500/5 shadow-sm transition-all hover:shadow-md">
+        <Card className="relative overflow-hidden border-sky-500/20 bg-gradient-to-br from-card to-sky-500/5 shadow-sm transition-all card-hover-effect cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Horas Hoje</CardTitle>
             <Clock className="h-4 w-4 text-sky-500" />
@@ -108,7 +108,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
         
-        <Card className="relative overflow-hidden border-emerald-500/20 bg-gradient-to-br from-card to-emerald-500/5 shadow-sm transition-all hover:shadow-md">
+        <Card className="relative overflow-hidden border-emerald-500/20 bg-gradient-to-br from-card to-emerald-500/5 shadow-sm transition-all card-hover-effect cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Matérias Ativas</CardTitle>
             <BookOpen className="h-4 w-4 text-emerald-500" />
@@ -121,7 +121,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
         
-        <Card className="relative overflow-hidden border-indigo-500/20 bg-gradient-to-br from-card to-indigo-500/5 shadow-sm transition-all hover:shadow-md">
+        <Card className="relative overflow-hidden border-indigo-500/20 bg-gradient-to-br from-card to-indigo-500/5 shadow-sm transition-all card-hover-effect cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total da Semana</CardTitle>
             <Calendar className="h-4 w-4 text-indigo-500" />
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
         
-        <Card className="relative overflow-hidden border-rose-500/20 bg-gradient-to-br from-card to-rose-500/5 shadow-sm transition-all hover:shadow-md">
+        <Card className="relative overflow-hidden border-rose-500/20 bg-gradient-to-br from-card to-rose-500/5 shadow-sm transition-all card-hover-effect cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Produtividade</CardTitle>
             <TrendingUp className="h-4 w-4 text-rose-500" />
@@ -150,7 +150,7 @@ export default async function DashboardPage() {
 
       {pendingReviews.length > 0 && (
         <div className="grid gap-4 grid-cols-1">
-          <Card className="shadow-sm border-amber-500/20 bg-gradient-to-r from-card to-amber-500/5">
+          <Card className="shadow-sm border-amber-500/20 bg-gradient-to-r from-card to-amber-500/5 card-hover-effect cursor-pointer">
             <CardHeader className="pb-2">
               <CardTitle className="font-semibold text-lg flex items-center text-amber-600 dark:text-amber-500">
                 <Bell className="w-5 h-5 mr-2" />
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
       )}
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
-        <Card className="col-span-1 lg:col-span-4 shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10">
+        <Card className="col-span-1 lg:col-span-4 shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10 card-hover-effect cursor-pointer">
           <CardHeader>
             <CardTitle className="font-semibold text-lg">Visão Geral (Semanal)</CardTitle>
           </CardHeader>
@@ -181,7 +181,7 @@ export default async function DashboardPage() {
             <OverviewChart data={overviewData} />
           </CardContent>
         </Card>
-        <Card className="col-span-1 lg:col-span-3 shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10">
+        <Card className="col-span-1 lg:col-span-3 shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10 card-hover-effect cursor-pointer">
           <CardHeader>
             <CardTitle className="font-semibold text-lg">Distribuição por Matéria</CardTitle>
           </CardHeader>
