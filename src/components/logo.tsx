@@ -2,59 +2,57 @@ import React from "react";
 
 export const Logo = ({ className = "h-12 w-12", showText = false }: { className?: string, showText?: boolean }) => {
   return (
-    <div className={`flex flex-col items-center gap-2 ${className}`}>
+    <div className={`flex flex-col items-center gap-4 ${className}`}>
       <svg
         viewBox="0 0 200 200"
-        className="h-full w-auto"
+        className="h-full w-auto drop-shadow-[0_0_15px_rgba(0,229,255,0.3)]"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="brand-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#00E5FF" />
-            <stop offset="50%" stopColor="#3B82F6" />
+            <stop offset="60%" stopColor="#3B82F6" />
             <stop offset="100%" stopColor="#A855F7" />
           </linearGradient>
         </defs>
         
-        {/* Top Arrow Part of S */}
+        {/* Superior Arrow (S part) */}
         <path
-          d="M60 60 C60 40, 140 40, 140 60 L140 75 L160 55 L140 35 L140 50 C140 30, 50 30, 50 60 C50 80, 100 85, 100 100"
-          fill="url(#logo-gradient)"
+          d="M50 70 C50 35, 150 35, 150 70 L150 85 L180 60 L150 35 L150 50 C150 20, 40 20, 40 70 C40 95, 100 100, 100 120"
+          fill="url(#brand-gradient)"
         />
         
-        {/* Bottom Arrow Part of S */}
+        {/* Inferior Arrow (S part) */}
         <path
-          d="M140 140 C140 160, 60 160, 60 140 L60 125 L40 145 L60 165 L60 150 C60 170, 150 170, 150 140 C150 120, 100 115, 100 100"
-          fill="url(#logo-gradient)"
+          d="M150 130 C150 165, 50 165, 50 130 L50 115 L20 140 L50 165 L50 150 C50 180, 160 180, 160 130 C160 105, 100 100, 100 80"
+          fill="url(#brand-gradient)"
         />
         
-        {/* Face Profile + Graduation Cap */}
-        <g transform="translate(75, 70) scale(0.5)">
-          {/* Cap */}
-          <path d="M20 50 L100 20 L180 50 L100 80 Z" fill="url(#logo-gradient)" />
-          {/* Head Silhouette */}
+        {/* Face Silhouette + Cap */}
+        <g transform="translate(65, 65) scale(0.7)">
+          <path d="M10 40 L50 10 L90 40 L50 70 Z" fill="url(#brand-gradient)" />
           <path 
-            d="M100 85 C80 85, 65 100, 65 125 C65 150, 80 165, 100 165 L115 165 L115 145 L130 145 L130 125 C130 100, 120 85, 100 85 Z" 
-            fill="url(#logo-gradient)" 
+            d="M50 75 C35 75, 25 85, 25 105 C25 125, 35 140, 50 140 L65 140 L65 125 L75 125 L75 105 C75 85, 65 75, 50 75 Z" 
+            fill="url(#brand-gradient)" 
           />
         </g>
       </svg>
       
       {showText && (
         <div className="flex flex-col items-center">
-          <h1 className="text-4xl font-bold tracking-tight text-white">
-            Study<span className="text-[#3B82F6]">OS</span>
-          </h1>
-          <p className="text-xs text-zinc-400 font-medium tracking-wide mt-1">
+          <div className="flex items-center gap-1">
+            <span className="text-5xl font-bold text-white tracking-tighter">Study</span>
+            <span className="text-5xl font-bold text-[#3B82F6] tracking-tighter">OS</span>
+          </div>
+          <p className="text-base text-zinc-400 font-medium tracking-tight mt-2 text-center max-w-[280px]">
             Transformando conhecimento em conquistas
           </p>
-          {/* Color Palette visualization */}
-          <div className="flex gap-1 mt-4 h-1.5">
-            <div className="w-8 bg-[#A855F7] rounded-full" />
-            <div className="w-8 bg-[#6366F1] rounded-full" />
-            <div className="w-8 bg-[#3B82F6] rounded-full" />
-            <div className="w-8 bg-[#00E5FF] rounded-full" />
+          <div className="flex gap-1.5 mt-6">
+            <div className="h-2 w-10 bg-[#A855F7] rounded-full" />
+            <div className="h-2 w-10 bg-[#6366F1] rounded-full" />
+            <div className="h-2 w-10 bg-[#3B82F6] rounded-full" />
+            <div className="h-2 w-10 bg-[#00E5FF] rounded-full" />
           </div>
         </div>
       )}

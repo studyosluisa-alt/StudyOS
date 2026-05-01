@@ -42,34 +42,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#1a1a1a,0%,#0a0a0a_100%)]" />
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden font-sans">
+      {/* Background with texture */}
+      <div className="absolute inset-0 bg-[#121212]" />
+      <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
       
-      {/* Ambient Lights */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-sky-500/10 blur-[120px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full" />
-
-      <div className="relative z-10 w-full max-w-[400px] px-6">
-        <div className="flex flex-col items-center mb-10">
-          <Logo className="h-20 w-20 mb-4" />
-          <h1 className="text-4xl font-bold tracking-tight text-white mb-2">
-            Study<span className="text-sky-400">OS</span>
-          </h1>
-          <p className="text-zinc-400 font-medium text-sm tracking-wide">
-            Sua jornada de estudos começa aqui
-          </p>
+      <div className="relative z-10 w-full max-w-[420px] px-6 py-12">
+        <div className="flex flex-col items-center mb-12">
+          <Logo className="h-24 w-24" showText={true} />
         </div>
 
-        <div className="bg-[#141414]/80 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-2xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">
+        <div className="bg-[#1a1a1a] border border-white/5 p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">
                 E-mail
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-zinc-600 group-focus-within:text-sky-400 transition-colors" />
                 </div>
                 <Input
@@ -78,17 +68,17 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 bg-black/40 border-white/5 text-white h-12 rounded-xl focus:border-sky-500/50 focus:ring-sky-500/20 transition-all placeholder:text-zinc-700"
+                  className="pl-12 bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-sky-500/50 focus:ring-0 transition-all placeholder:text-zinc-800"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">
                 Senha
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-zinc-600 group-focus-within:text-purple-400 transition-colors" />
                 </div>
                 <Input
@@ -97,7 +87,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 bg-black/40 border-white/5 text-white h-12 rounded-xl focus:border-purple-500/50 focus:ring-purple-500/20 transition-all placeholder:text-zinc-700"
+                  className="pl-12 bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-purple-500/50 focus:ring-0 transition-all placeholder:text-zinc-800"
                 />
               </div>
             </div>
@@ -105,10 +95,10 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-bold text-lg shadow-lg shadow-sky-500/20 transition-all active:scale-[0.98]"
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#6366F1] to-[#00E5FF] hover:opacity-90 text-white font-bold text-lg shadow-xl shadow-sky-500/10 transition-all active:scale-[0.98]"
             >
               {loading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-6 w-6 animate-spin" />
               ) : (
                 <div className="flex items-center justify-center gap-2">
                   Entrar
@@ -118,14 +108,14 @@ export default function LoginPage() {
             </Button>
             
             <div className="flex justify-center">
-              <Link href="#" className="text-xs text-zinc-500 hover:text-white transition-colors">
+              <Link href="#" className="text-sm text-zinc-600 hover:text-white transition-colors">
                 Esqueceu a senha?
               </Link>
             </div>
           </form>
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-10 text-center">
           <p className="text-sm text-zinc-500">
             Não tem uma conta?{" "}
             <Link 
