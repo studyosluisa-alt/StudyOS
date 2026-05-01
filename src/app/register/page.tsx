@@ -48,14 +48,17 @@ export default function RegisterPage() {
       <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
       
       <div className="relative z-10 w-full max-w-[420px] px-6 py-12">
-        <div className="flex flex-col items-center mb-12">
-          <Logo className="h-20 w-20 mb-6" />
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-full h-40 relative mb-4">
+            <img 
+              src="/logo.png" 
+              alt="StudyOS" 
+              className="w-full h-full object-contain"
+            />
+          </div>
           <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
             Criar Conta
           </h1>
-          <p className="text-zinc-500 font-medium text-sm text-center">
-            Junte-se à jornada e transforme seu conhecimento
-          </p>
         </div>
 
         <div className="bg-[#1a1a1a] border border-white/5 p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
