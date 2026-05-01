@@ -8,13 +8,14 @@ export async function GET(
 ) {
   const session = await auth();
   if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+  const userId = session.user.id;
 
   try {
     const { id } = await params;
     const subject = await prisma.subject.findFirst({
       where: { 
         id,
-        userId: session.user.id
+        userId
       },
       include: {
         materials: true,

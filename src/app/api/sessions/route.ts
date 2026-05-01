@@ -5,11 +5,12 @@ import prisma from "@/lib/prisma";
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+  const userId = session.user.id;
 
   try {
     const sessions = await prisma.studySession.findMany({
       where: {
-        subject: { userId: session.user.id }
+        subject: { userId }
       },
       include: {
         subject: true,
@@ -26,6 +27,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const sessionUser = await auth();
   if (!sessionUser?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+  const userId = sessionUser.user.id;
 
   try {
     const body = await req.json();
@@ -37,7 +39,7 @@ export async function POST(req: Request) {
 
     // Verify ownership of the subject
     const subject = await prisma.subject.findFirst({
-      where: { id: subjectId, userId: sessionUser.user.id }
+      where: { id: subjectId, userId }
     });
 
     if (!subject) {

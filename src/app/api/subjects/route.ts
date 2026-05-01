@@ -5,10 +5,11 @@ import prisma from "@/lib/prisma";
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+  const userId = session.user.id;
 
   try {
     const subjects = await prisma.subject.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       orderBy: { name: "asc" },
     });
     return NextResponse.json(subjects);
@@ -21,6 +22,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+  const userId = session.user.id;
 
   try {
     const body = await req.json();
@@ -33,7 +35,7 @@ export async function POST(req: Request) {
     const subject = await prisma.subject.create({
       data: {
         name,
-        userId: session.user.id,
+        userId,
         color: color || "#3b82f6",
       },
     });

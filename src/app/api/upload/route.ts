@@ -6,6 +6,8 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
 
+  const userId = session.user.id;
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
@@ -21,7 +23,7 @@ export async function POST(request: Request) {
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: `studyos_uploads/${session.user.id}`,
+          folder: `studyos_uploads/${userId}`,
           resource_type: "auto",
         },
         (error, result) => {
