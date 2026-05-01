@@ -52,6 +52,8 @@ const routes = [
 export function Sidebar() {
   const pathname = usePathname()
   const { setTheme, theme } = useTheme()
+  const { data: session } = useSession()
+  const isAdmin = (session?.user as any)?.role === "ADMIN"
 
   return (
     <div className="space-y-4 py-4 flex flex-col h-full bg-[#111827] text-white">
@@ -77,6 +79,21 @@ export function Sidebar() {
               </div>
             </Link>
           ))}
+          
+          {isAdmin && (
+            <Link
+              href="/admin/users"
+              className={cn(
+                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-rose-500/10 rounded-lg transition mt-4",
+                pathname === "/admin/users" ? "text-rose-500 bg-rose-500/10" : "text-rose-400/70"
+              )}
+            >
+              <div className="flex items-center flex-1">
+                <Shield className="h-5 w-5 mr-3 text-rose-500" />
+                Usuários (Admin)
+              </div>
+            </Link>
+          )}
         </div>
       </div>
       <div className="px-3 py-2 space-y-2 border-t border-white/10 pt-4">
