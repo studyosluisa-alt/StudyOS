@@ -147,4 +147,11 @@ input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 1000px #0d0d0d inset !important;
   -webkit-text-fill-color: white !important;
   transition: background-color 5000s ease-in-out 0s;
+  caret-color: white !important;
+}
+
+/* Fix focus ring color on dark login/register pages */
+.login-input [data-slot="input"] {
+  --ring: hsl(199, 89%, 48%);
+  --border: rgba(255,255,255,0.1);
 }

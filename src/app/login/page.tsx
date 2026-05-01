@@ -5,7 +5,6 @@ import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Mail, Lock, Loader2, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
@@ -41,94 +40,128 @@ export default function LoginPage() {
     }
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    height: "56px",
+    paddingLeft: "48px",
+    paddingRight: "16px",
+    backgroundColor: "#0d0d0d",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "16px",
+    color: "white",
+    fontSize: "16px",
+    outline: "none",
+    transition: "border-color 0.2s",
+    colorScheme: "dark",
+  }
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden font-sans">
-      {/* Background with texture */}
-      <div className="absolute inset-0 bg-[#121212]" />
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
-      
-      <div className="relative z-10 w-full max-w-[440px] px-6 py-12">
-        <div className="flex flex-col items-center mb-12">
-          <Logo className="h-56 w-full" variant="full" />
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#111111" }}>
+      <div style={{ width: "100%", maxWidth: "420px", padding: "24px" }}>
+        
+        {/* Logo */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "32px" }}>
+          <Logo className="h-56 w-full max-w-[360px]" />
         </div>
 
-        <div className="bg-[#1a1a1a] border border-white/5 p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">
+        {/* Form Card */}
+        <div style={{ backgroundColor: "#1a1a1a", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "28px", padding: "36px", boxShadow: "0 20px 50px rgba(0,0,0,0.5)" }}>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            
+            {/* Email */}
+            <div>
+              <label style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#71717a", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "8px" }}>
                 E-mail
               </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-zinc-600 group-focus-within:text-sky-400 transition-colors" />
-                </div>
-                <Input
+              <div style={{ position: "relative" }}>
+                <Mail style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#52525b", width: "20px", height: "20px", pointerEvents: "none" }} />
+                <input
                   type="email"
                   placeholder="seu@email.com"
                   required
                   value={email}
+                  autoComplete="email"
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{ backgroundColor: '#0d0d0d !important' }}
-                  className="pl-12 bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-sky-500/50 focus:ring-0 transition-all placeholder:text-zinc-800 autofill:bg-[#0d0d0d] [&:-webkit-autofill]:shadow-[0_0_0_1000px_#0d0d0d_inset] [&:-webkit-autofill]:text-white"
+                  style={inputStyle}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "rgba(56,189,248,0.5)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
                 />
               </div>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">
+            {/* Password */}
+            <div>
+              <label style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#71717a", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "8px" }}>
                 Senha
               </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-zinc-600 group-focus-within:text-purple-400 transition-colors" />
-                </div>
-                <Input
+              <div style={{ position: "relative" }}>
+                <Lock style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#52525b", width: "20px", height: "20px", pointerEvents: "none" }} />
+                <input
                   type="password"
                   placeholder="••••••••"
                   required
                   value={password}
+                  autoComplete="current-password"
                   onChange={(e) => setPassword(e.target.value)}
-                  style={{ backgroundColor: '#0d0d0d !important' }}
-                  className="pl-12 bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-purple-500/50 focus:ring-0 transition-all placeholder:text-zinc-800 autofill:bg-[#0d0d0d] [&:-webkit-autofill]:shadow-[0_0_0_1000px_#0d0d0d_inset] [&:-webkit-autofill]:text-white"
+                  style={inputStyle}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "rgba(168,85,247,0.5)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
                 />
               </div>
             </div>
 
-            <Button
+            {/* Submit */}
+            <button
               type="submit"
               disabled={loading}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#6366F1] to-[#00E5FF] hover:opacity-90 text-white font-bold text-lg shadow-xl shadow-sky-500/10 transition-all active:scale-[0.98]"
+              style={{
+                width: "100%",
+                height: "56px",
+                borderRadius: "16px",
+                background: "linear-gradient(to right, #A855F7, #6366F1, #00E5FF)",
+                color: "white",
+                fontWeight: "700",
+                fontSize: "18px",
+                border: "none",
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.7 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+              }}
             >
-              {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  Entrar
-                  <ArrowRight className="h-5 w-5" />
-                </div>
-              )}
-            </Button>
-            
-            <div className="flex justify-center">
-              <Link href="#" className="text-sm text-zinc-600 hover:text-white transition-colors">
+              {loading ? <Loader2 style={{ width: "24px", height: "24px", animation: "spin 1s linear infinite" }} /> : <>Entrar <ArrowRight style={{ width: "20px", height: "20px" }} /></>}
+            </button>
+
+            <div style={{ textAlign: "center" }}>
+              <Link href="#" style={{ fontSize: "14px", color: "#52525b", textDecoration: "none" }}>
                 Esqueceu a senha?
               </Link>
             </div>
           </form>
         </div>
 
-        <div className="mt-10 text-center">
-          <p className="text-sm text-zinc-500">
+        <div style={{ marginTop: "32px", textAlign: "center" }}>
+          <p style={{ fontSize: "14px", color: "#71717a" }}>
             Não tem uma conta?{" "}
-            <Link 
-              href="/register" 
-              className="text-sky-400 font-semibold hover:text-sky-300 transition-colors"
-            >
+            <Link href="/register" style={{ color: "#38bdf8", fontWeight: "600", textDecoration: "none" }}>
               Criar conta gratuita
             </Link>
           </p>
         </div>
       </div>
+
+      <style>{`
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0 1000px #0d0d0d inset !important;
+          -webkit-text-fill-color: white !important;
+          caret-color: white !important;
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   )
 }
