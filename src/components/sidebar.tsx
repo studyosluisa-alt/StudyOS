@@ -14,6 +14,8 @@ import {
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
+import { LogOut } from "lucide-react"
+import { signOut } from "next-auth/react"
 
 const routes = [
   {
@@ -77,10 +79,9 @@ export function Sidebar() {
           ))}
         </div>
       </div>
-      <div className="px-3 py-2">
+      <div className="px-3 py-2 space-y-2 border-t border-white/10 pt-4">
         <Button 
           variant="ghost" 
-          size="icon" 
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="w-full justify-start text-zinc-400 hover:text-white hover:bg-white/10"
         >
@@ -90,6 +91,14 @@ export function Sidebar() {
             <Moon className="h-5 w-5 mr-3" />
           )}
           <span>Mudar Tema</span>
+        </Button>
+        <Button 
+          variant="ghost" 
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="w-full justify-start text-zinc-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+        >
+          <LogOut className="h-5 w-5 mr-3" />
+          <span>Sair da Conta</span>
         </Button>
       </div>
     </div>

@@ -7,11 +7,15 @@ import {
   Bell
 } from "lucide-react";
 import { OverviewChart, DistributionChart } from "@/components/charts";
-import prisma from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+  const userId = session.user.id;
+
   // Fetch real data
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -19,7 +23,10 @@ export default async function DashboardPage() {
 
   // 1. Horas Hoje
   const todaySessions = await prisma.studySession.findMany({
-    where: { startTime: { gte: startOfToday } }
+    where: { 
+      startTime: { gte: startOfToday },
+      subject: { userId }
+    }
   });
   const todaySeconds = todaySessions.reduce((acc: number, s: any) => acc + (s.duration || 0), 0);
   const hrsToday = Math.floor(todaySeconds / 3600);
@@ -27,7 +34,10 @@ export default async function DashboardPage() {
 
   // 2. Total da Semana
   const weekSessions = await prisma.studySession.findMany({
-    where: { startTime: { gte: startOfWeek } },
+    where: { 
+      startTime: { gte: startOfWeek },
+      subject: { userId }
+    },
     include: { subject: true }
   });
   const weekSeconds = weekSessions.reduce((acc: number, s: any) => acc + (s.duration || 0), 0);

@@ -1,9 +1,12 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+
   try {
     const subjects = await prisma.subject.findMany({
+      where: { userId: session.user.id },
       orderBy: { name: "asc" },
     });
     return NextResponse.json(subjects);
@@ -14,6 +17,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const session = await auth();
+  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+
   try {
     const body = await req.json();
     const { name, color } = body;
@@ -25,6 +31,7 @@ export async function POST(req: Request) {
     const subject = await prisma.subject.create({
       data: {
         name,
+        userId: session.user.id,
         color: color || "#3b82f6",
       },
     });
