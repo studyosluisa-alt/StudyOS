@@ -47,9 +47,9 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-[#121212]" />
       <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
       
-      <div className="relative z-10 w-full max-w-[420px] px-6 py-12">
-        <div className="flex flex-col items-center mb-10">
-          <Logo className="h-48 w-full" />
+      <div className="relative z-10 w-full max-w-[440px] px-6 py-12">
+        <div className="flex flex-col items-center mb-12">
+          <Logo className="h-56 w-full" variant="full" />
         </div>
 
         <div className="bg-[#1a1a1a] border border-white/5 p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
@@ -68,7 +68,8 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 bg-[#0d0d0d] !bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-sky-500/50 focus:ring-0 transition-all placeholder:text-zinc-800 [color-scheme:dark] [&:-webkit-autofill]:shadow-[0_0_0_30px_#0d0d0d_inset] [&:-webkit-autofill]:text-fill-white"
+                  style={{ backgroundColor: '#0d0d0d !important' }}
+                  className="pl-12 bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-sky-500/50 focus:ring-0 transition-all placeholder:text-zinc-800 autofill:bg-[#0d0d0d] [&:-webkit-autofill]:shadow-[0_0_0_1000px_#0d0d0d_inset] [&:-webkit-autofill]:text-white"
                 />
               </div>
             </div>
@@ -87,7 +88,8 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 bg-[#0d0d0d] !bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-purple-500/50 focus:ring-0 transition-all placeholder:text-zinc-800 [color-scheme:dark] [&:-webkit-autofill]:shadow-[0_0_0_30px_#0d0d0d_inset] [&:-webkit-autofill]:text-fill-white"
+                  style={{ backgroundColor: '#0d0d0d !important' }}
+                  className="pl-12 bg-[#0d0d0d] border-white/10 text-white h-14 rounded-2xl focus:border-purple-500/50 focus:ring-0 transition-all placeholder:text-zinc-800 autofill:bg-[#0d0d0d] [&:-webkit-autofill]:shadow-[0_0_0_1000px_#0d0d0d_inset] [&:-webkit-autofill]:text-white"
                 />
               </div>
             </div>
