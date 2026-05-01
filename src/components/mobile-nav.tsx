@@ -21,10 +21,7 @@ export function MobileNav() {
   return (
     <div className="md:hidden flex items-center justify-between w-full p-4 border-b bg-background z-50">
       <div className="flex items-center gap-2">
-        <Logo className="h-8 w-8" />
-        <h1 className="text-xl font-bold">
-          Study<span className="text-sky-500">OS</span>
-        </h1>
+        <Logo className="h-10 w-28" />
       </div>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9 md:hidden">

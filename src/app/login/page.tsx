@@ -49,14 +49,7 @@ export default function LoginPage() {
       
       <div className="relative z-10 w-full max-w-[420px] px-6 py-12">
         <div className="flex flex-col items-center mb-10">
-          {/* Logo container increased to show the full brand image */}
-          <div className="w-full h-48 relative mb-4">
-            <img 
-              src="/logo.png" 
-              alt="StudyOS" 
-              className="w-full h-full object-contain"
-            />
-          </div>
+          <Logo className="h-48 w-full" />
         </div>
 
         <div className="bg-[#1a1a1a] border border-white/5 p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">

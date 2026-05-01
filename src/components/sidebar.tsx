@@ -63,11 +63,8 @@ export function Sidebar() {
   return (
     <div className="space-y-4 py-4 flex flex-col h-full bg-[#111827] text-white">
       <div className="px-3 py-2 flex-1">
-        <Link href="/dashboard" className="flex items-center pl-3 mb-14">
-          <Logo className="h-10 w-10" />
-          <h1 className="text-2xl font-bold ml-3">
-            Study<span className="text-sky-500">OS</span>
-          </h1>
+        <Link href="/dashboard" className="flex items-center justify-center mb-10 px-4">
+          <Logo className="h-28 w-full" />
         </Link>
         <div className="space-y-1">
           {routes.map((route) => (
