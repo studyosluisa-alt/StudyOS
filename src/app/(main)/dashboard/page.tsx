@@ -27,11 +27,29 @@ export default async function DashboardPage() {
     where: { 
       startTime: { gte: startOfToday },
       subject: { userId }
-    }
+    },
+    include: { subject: true }
   });
   const todaySeconds = todaySessions.reduce((acc: number, s: any) => acc + (s.duration || 0), 0);
   const hrsToday = Math.floor(todaySeconds / 3600);
   const minsToday = Math.floor((todaySeconds % 3600) / 60);
+
+  // 1.5. Visão Diária por Matéria
+  const dailyDistributionMap = new Map();
+  todaySessions.forEach((session: any) => {
+    if (!dailyDistributionMap.has(session.subjectId)) {
+      dailyDistributionMap.set(session.subjectId, {
+        name: session.subject.name,
+        color: session.subject.color || "#3b82f6",
+        duration: 0
+      });
+    }
+    const data = dailyDistributionMap.get(session.subjectId);
+    data.duration += session.duration;
+    dailyDistributionMap.set(session.subjectId, data);
+  });
+  
+  const dailyData = Array.from(dailyDistributionMap.values()).sort((a: any, b: any) => b.duration - a.duration);
 
   // 2. Total da Semana
   const weekSessions = await prisma.studySession.findMany({
@@ -183,6 +201,45 @@ export default async function DashboardPage() {
           </Card>
         </div>
       )}
+
+      <div className="grid gap-4 grid-cols-1">
+        <Card className="shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10">
+          <CardHeader className="pb-4">
+            <CardTitle className="font-semibold text-lg flex items-center">
+              <Clock className="w-5 h-5 mr-2 text-primary" />
+              Estudado Hoje
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {dailyData.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum estudo registrado hoje ainda.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {dailyData.map((d: any, i: number) => {
+                  const hrs = Math.floor(d.duration / 3600);
+                  const mins = Math.floor((d.duration % 3600) / 60);
+                  const timeStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+                  const percentage = todaySeconds > 0 ? Math.round((d.duration / todaySeconds) * 100) : 0;
+                  return (
+                    <div key={i} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: d.color }} />
+                          <span className="font-medium">{d.name}</span>
+                        </div>
+                        <span className="font-bold text-muted-foreground">{timeStr} <span className="opacity-50 font-normal ml-1">({percentage}%)</span></span>
+                      </div>
+                      <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ backgroundColor: d.color, width: `${percentage}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
         <Card className="col-span-1 lg:col-span-4 shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10 card-hover-effect cursor-pointer">
