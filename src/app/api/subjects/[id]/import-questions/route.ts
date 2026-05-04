@@ -3,8 +3,6 @@ import prisma from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || "")
-
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -12,7 +10,12 @@ export async function POST(
   try {
     const session = await auth()
     if (!session?.user?.email) {
-      return new NextResponse("Não autorizado", { status: 401 })
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ error: "Chave da API (GOOGLE_GEMINI_API_KEY) não encontrada no servidor. Verifique as variáveis de ambiente na Vercel." }, { status: 500 })
     }
 
     const resolvedParams = await params
@@ -21,37 +24,30 @@ export async function POST(
     const formData = await req.formData()
     const file = formData.get("file") as File
     if (!file) {
-      return new NextResponse("Nenhum arquivo enviado", { status: 400 })
+      return NextResponse.json({ error: "Nenhum arquivo enviado" }, { status: 400 })
     }
 
-    // Converter arquivo para base64 para o Gemini
+    // Preparar IA
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+
+    // Converter arquivo para base64
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
     const base64Data = buffer.toString("base64")
-
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    const mimeType = file.type || "image/jpeg"
 
     const prompt = `
       Analise este documento/imagem de prova e extraia todas as questões de múltipla escolha.
-      Para cada questão, identifique:
-      - O enunciado completo.
-      - As alternativas A, B, C, D e E (se houver).
-      - A letra da alternativa correta (A-E), se estiver indicada na prova ou se você souber.
-      - Uma breve explicação do porquê essa é a correta.
-
-      Retorne APENAS um array JSON de objetos, seguindo EXATAMENTE esta estrutura, sem markdown e sem textos adicionais:
-      [
-        {
-          "content": "string",
-          "optionA": "string",
-          "optionB": "string",
-          "optionC": "string",
-          "optionD": "string ou null",
-          "optionE": "string ou null",
-          "correctOption": "A, B, C, D ou E",
-          "explanation": "string ou null"
-        }
-      ]
+      Retorne APENAS um array JSON puro, sem blocos de código markdown (sem \`\`\`json), contendo objetos com:
+      - content: enunciado
+      - optionA: texto da opção A
+      - optionB: texto da opção B
+      - optionC: texto da opção C
+      - optionD: texto da opção D ou null
+      - optionE: texto da opção E ou null
+      - correctOption: A, B, C, D ou E
+      - explanation: explicação curta
     `
 
     const result = await model.generateContent([
@@ -59,31 +55,37 @@ export async function POST(
       {
         inlineData: {
           data: base64Data,
-          mimeType: file.type
+          mimeType: mimeType
         }
       }
     ])
 
-    const response = result.response
-    const text = response.text().replace(/```json|```/g, "").trim()
+    const text = result.response.text().trim()
+    
+    // Tentar limpar possíveis markdown se a IA ainda assim enviar
+    const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim()
     
     let questionsData
     try {
-      questionsData = JSON.parse(text)
+      questionsData = JSON.parse(cleanJson)
     } catch (e) {
-      console.error("Erro ao parsear JSON da IA:", text)
-      return new NextResponse("A IA não conseguiu estruturar os dados corretamente. Tente uma imagem mais clara.", { status: 500 })
+      console.error("Erro no JSON da IA:", text)
+      return NextResponse.json({ error: "A IA gerou um formato inválido. Tente novamente com uma imagem mais nítida.", details: text }, { status: 500 })
     }
 
-    // Salvar todas as questões no banco de dados vinculadas à matéria
-    const savedQuestions = await Promise.all(
+    if (!Array.isArray(questionsData)) {
+      return NextResponse.json({ error: "A IA não retornou uma lista de questões." }, { status: 500 })
+    }
+
+    // Salvar no banco
+    const saved = await Promise.all(
       questionsData.map((q: any) => 
         prisma.question.create({
           data: {
-            content: q.content,
-            optionA: q.optionA,
-            optionB: q.optionB,
-            optionC: q.optionC,
+            content: q.content || "Questão sem enunciado",
+            optionA: q.optionA || "-",
+            optionB: q.optionB || "-",
+            optionC: q.optionC || "-",
             optionD: q.optionD || null,
             optionE: q.optionE || null,
             correctOption: q.correctOption || "A",
@@ -95,12 +97,15 @@ export async function POST(
     )
 
     return NextResponse.json({ 
-      message: `${savedQuestions.length} questões importadas com sucesso!`,
-      count: savedQuestions.length 
+      message: `${saved.length} questões importadas com sucesso!`,
+      count: saved.length 
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("[IMPORT_QUESTIONS_ERROR]", error)
-    return new NextResponse("Erro interno ao processar a prova", { status: 500 })
+    return NextResponse.json({ 
+      error: "Erro interno no servidor de IA", 
+      message: error.message 
+    }, { status: 500 })
   }
 }

@@ -224,10 +224,11 @@ export default function SubjectDetailsPage({ params }: { params: Promise<{ id: s
         setImportFile(null)
         refreshData()
       } else {
-        toast.error(data.error || "Erro ao importar questões")
+        // Exibe o erro específico vindo do backend
+        toast.error(data.error || data.message || "Erro ao importar questões")
       }
-    } catch (e) {
-      toast.error("Ocorreu um erro no processamento da IA")
+    } catch (e: any) {
+      toast.error("Ocorreu um erro na comunicação com o servidor")
     } finally {
       setIsImporting(false)
     }
