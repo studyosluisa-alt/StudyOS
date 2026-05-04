@@ -34,6 +34,7 @@ export default function TimerPage() {
   const [manualMinutes, setManualMinutes] = useState(0)
   const [manualDate, setManualDate] = useState(() => new Date().toISOString().split("T")[0])
   const [isRunning, setIsRunning] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   
   const [selectedSubject, setSelectedSubject] = useState<string>("")
   const [subjects, setSubjects] = useState<{id: string, name: string, color: string}[]>([])
@@ -153,6 +154,7 @@ export default function TimerPage() {
       return
     }
     
+    setIsSaving(true)
     try {
       const response = await fetch("/api/sessions", {
         method: "POST",
@@ -178,6 +180,8 @@ export default function TimerPage() {
       }
     } catch (error) {
       toast.error("Erro ao conectar com o servidor.")
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -192,6 +196,7 @@ export default function TimerPage() {
       return
     }
 
+    setIsSaving(true)
     try {
       const start = new Date(manualDate + "T12:00:00") // rough estimate for the middle of the day
       
@@ -218,6 +223,8 @@ export default function TimerPage() {
       }
     } catch (error) {
       toast.error("Erro ao conectar com o servidor.")
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -393,11 +400,11 @@ export default function TimerPage() {
                 <Button 
                   size="lg" 
                   variant="default" 
-                  className="h-16 w-16 rounded-full bg-blue-600 hover:bg-blue-700"
+                  className="h-16 w-16 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                   onClick={handleSave}
-                  disabled={time === 0 || isRunning}
+                  disabled={time === 0 || isRunning || isSaving}
                 >
-                  <Save className="h-6 w-6" />
+                  {isSaving ? <Loader2 className="h-6 w-6 animate-spin" /> : <Save className="h-6 w-6" />}
                 </Button>
               </div>
             ) : (
@@ -413,11 +420,12 @@ export default function TimerPage() {
                 </div>
                 <Button 
                   size="lg" 
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 h-14 rounded-xl text-base font-bold shadow-indigo-500/20 shadow-lg" 
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 h-14 rounded-xl text-base font-bold shadow-indigo-500/20 shadow-lg disabled:opacity-70" 
                   onClick={handleSaveManual}
+                  disabled={isSaving}
                 >
-                  <Save className="h-5 w-5 mr-2" />
-                  Salvar Tempo Manual
+                  {isSaving ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Save className="h-5 w-5 mr-2" />}
+                  {isSaving ? "Salvando..." : "Salvar Tempo Manual"}
                 </Button>
               </div>
             )}
