@@ -25,8 +25,8 @@ export async function POST(
     const bytes = await file.arrayBuffer()
     const base64Data = Buffer.from(bytes).toString("base64")
 
-    // Chamada direta via Fetch (ignora bugs da biblioteca)
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+    // TENTANDO V1BETA COM FETCH DIRETO
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
     
     const response = await fetch(url, {
       method: 'POST',
@@ -34,7 +34,7 @@ export async function POST(
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: "Analise esta prova e extraia as questões de múltipla escolha. Retorne APENAS um array JSON: [{content, optionA, optionB, optionC, optionD, optionE, correctOption, explanation}]" },
+            { text: "Extraia as questões de múltipla escolha desta prova em um array JSON: [{content, optionA, optionB, optionC, optionD, optionE, correctOption, explanation}]" },
             { inlineData: { mimeType: file.type || "image/jpeg", data: base64Data } }
           ]
         }]
@@ -45,7 +45,7 @@ export async function POST(
 
     if (!response.ok) {
       return NextResponse.json({ 
-        error: "Erro na API da Google", 
+        error: "Erro na API da Google (v1beta)", 
         message: data.error?.message || "Erro desconhecido" 
       }, { status: response.status })
     }
@@ -76,7 +76,6 @@ export async function POST(
     return NextResponse.json({ message: `${saved.length} questões importadas!` })
 
   } catch (error: any) {
-    console.error("[IMPORT_QUESTIONS_FATAL]", error)
     return NextResponse.json({ 
       error: "Erro no processamento", 
       message: error.message 
