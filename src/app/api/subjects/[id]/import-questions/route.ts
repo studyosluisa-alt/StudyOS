@@ -32,16 +32,12 @@ export async function POST(
     const base64Data = buffer.toString("base64")
     const mimeType = file.type || "image/jpeg"
 
+    // FORÇAR VERSÃO V1 DA API
     const genAI = new GoogleGenerativeAI(apiKey)
     
-    // Lista de modelos para tentar (do mais novo para o mais compatível)
-    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro-vision"]
-    let lastError = ""
-    let result = null
-
     const prompt = `
       Analise este documento/imagem de prova e extraia todas as questões de múltipla escolha.
-      Retorne APENAS um array JSON puro, sem blocos de código markdown, contendo objetos com:
+      Retorne APENAS um array JSON puro, contendo objetos com:
       {
         "content": "enunciado",
         "optionA": "texto A",
@@ -54,31 +50,21 @@ export async function POST(
       }
     `
 
-    for (const modelName of modelsToTry) {
-      try {
-        console.log(`Tentando modelo: ${modelName}...`)
-        const model = genAI.getGenerativeModel({ model: modelName })
-        result = await model.generateContent([
-          prompt,
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: mimeType
-            }
-          }
-        ])
-        if (result) break // Se funcionou, sai do loop
-      } catch (err: any) {
-        console.error(`Falha no modelo ${modelName}:`, err.message)
-        lastError = err.message
+    // Tentar o modelo Flash na v1 (versão estável)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1" })
+    
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: mimeType
+        }
       }
-    }
+    ])
 
     if (!result) {
-      return NextResponse.json({ 
-        error: "Todos os modelos de IA falharam", 
-        message: lastError 
-      }, { status: 500 })
+      return NextResponse.json({ error: "Falha na resposta da IA" }, { status: 500 })
     }
 
     const text = result.response.text().trim()
@@ -88,7 +74,7 @@ export async function POST(
     try {
       questionsData = JSON.parse(cleanJson)
     } catch (e) {
-      return NextResponse.json({ error: "Formato de resposta inválido da IA.", details: text }, { status: 500 })
+      return NextResponse.json({ error: "Erro ao ler as questões geradas.", details: text }, { status: 500 })
     }
 
     const saved = await Promise.all(
@@ -117,7 +103,7 @@ export async function POST(
   } catch (error: any) {
     console.error("[IMPORT_QUESTIONS_FATAL]", error)
     return NextResponse.json({ 
-      error: "Erro fatal no processamento", 
+      error: "Erro na conexão com a IA", 
       message: error.message 
     }, { status: 500 })
   }
