@@ -203,7 +203,7 @@ export default async function DashboardPage() {
       )}
 
       <div className="grid gap-4 grid-cols-1">
-        <Card className="shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10">
+        <Card className="shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10 card-hover-effect cursor-pointer">
           <CardHeader className="pb-4">
             <CardTitle className="font-semibold text-lg flex items-center">
               <Clock className="w-5 h-5 mr-2 text-primary" />
