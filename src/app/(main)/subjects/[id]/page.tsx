@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,7 +21,8 @@ import {
   Info,
   Sparkles,
   FileUp,
-  Loader2
+  Loader2,
+  RotateCcw
 } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -57,9 +58,9 @@ interface Subject {
   color: string
 }
 
-export default function SubjectDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
-  const subjectId = resolvedParams.id
+export default function SubjectDetailsPage() {
+  const params = useParams()
+  const subjectId = params.id as string
   const router = useRouter()
 
   const [subject, setSubject] = useState<Subject | null>(null)
@@ -260,7 +261,19 @@ export default function SubjectDetailsPage({ params }: { params: Promise<{ id: s
     setFlippedCards(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
-  if (loading) return <div className="p-8">Carregando...</div>
+  if (loading) return (
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 max-w-7xl mx-auto animate-pulse">
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 bg-muted rounded-md" />
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 rounded-full bg-muted" />
+          <div className="h-8 w-48 bg-muted rounded-md" />
+        </div>
+      </div>
+      <div className="w-full md:w-96 h-12 bg-muted rounded-xl" />
+      <div className="h-[400px] bg-muted/50 rounded-3xl" />
+    </div>
+  )
   if (!subject) return <div className="p-8">Matéria não encontrada.</div>
 
   return (
@@ -473,6 +486,16 @@ export default function SubjectDetailsPage({ params }: { params: Promise<{ id: s
               <p className="text-sm text-muted-foreground">Pratique com exercícios e simulados inteligentes.</p>
             </div>
             <div className="flex gap-2 w-full md:w-auto">
+              {/* Botão de Refazer */}
+              <Button 
+                variant="outline" 
+                onClick={() => { setUserAnswers({}); setShowResults({}) }}
+                className="h-9 px-4 py-2 border-border hover:bg-muted font-medium"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Refazer
+              </Button>
+
               {/* Botão de Importação IA */}
               <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
                 <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 flex-1 border border-orange-500/30 hover:bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold group">
