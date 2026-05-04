@@ -26,11 +26,12 @@ export async function POST(
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
     const base64Data = buffer.toString("base64")
+    const mimeType = file.type || "image/jpeg"
 
     const genAI = new GoogleGenerativeAI(apiKey)
     
-    // ATUALIZADO PARA O MODELO GEMINI 2.5 FLASH! (O 1.5 FOI APOSENTADO)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    // LISTA DE MODELOS VÁLIDOS EM 2026 (Com fallback se um estiver lotado - Erro 503)
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]
     
     const prompt = `
       Analise este documento de prova e extraia todas as questões de múltipla escolha.
@@ -47,15 +48,41 @@ export async function POST(
       }
     `
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: file.type || "image/jpeg"
+    let result = null
+    let lastError = ""
+
+    // Tentar cada modelo da lista
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`Tentando modelo: ${modelName}...`)
+        const model = genAI.getGenerativeModel({ model: modelName })
+        result = await model.generateContent([
+          prompt,
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType
+            }
+          }
+        ])
+        
+        if (result) {
+          console.log(`Sucesso com o modelo: ${modelName}`)
+          break // Se deu certo, sai do loop
         }
+      } catch (err: any) {
+        console.error(`Falha no modelo ${modelName}:`, err.message)
+        lastError = err.message
+        // Se for erro de demanda (503), o loop continua e tenta o próximo!
       }
-    ])
+    }
+
+    if (!result) {
+      return NextResponse.json({ 
+        error: "Todos os modelos estão ocupados no momento. Tente novamente em alguns segundos.", 
+        message: lastError 
+      }, { status: 503 })
+    }
 
     const text = result.response.text().trim()
     const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim()
@@ -84,7 +111,7 @@ export async function POST(
 
   } catch (error: any) {
     return NextResponse.json({ 
-      error: "Erro na conexão com a IA", 
+      error: "Erro no processamento dos dados", 
       message: error.message 
     }, { status: 500 })
   }
