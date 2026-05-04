@@ -1,7 +1,6 @@
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import { NextResponse } from "next/server"
-import { GoogleGenerativeAI } from "@google/generative-ai"
 
 export async function POST(
   req: Request,
@@ -24,40 +23,34 @@ export async function POST(
     const formData = await req.formData()
     const file = formData.get("file") as File
     const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const base64Data = buffer.toString("base64")
+    const base64Data = Buffer.from(bytes).toString("base64")
 
-    const genAI = new GoogleGenerativeAI(apiKey)
+    // Chamada direta via Fetch (ignora bugs da biblioteca)
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`
     
-    // USANDO O MODELO FLASH (REQUER CHAVE DO GOOGLE AI STUDIO EM NOVO PROJETO)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-    
-    const prompt = `
-      Analise este documento de prova e extraia todas as questões de múltipla escolha.
-      Retorne APENAS um array JSON puro (sem markdown), contendo objetos com:
-      {
-        "content": "enunciado",
-        "optionA": "texto A",
-        "optionB": "texto B",
-        "optionC": "texto C",
-        "optionD": "texto D ou null",
-        "optionE": "texto E ou null",
-        "correctOption": "A, B, C, D ou E",
-        "explanation": "explicação curta"
-      }
-    `
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: "Analise esta prova e extraia as questões de múltipla escolha. Retorne APENAS um array JSON: [{content, optionA, optionB, optionC, optionD, optionE, correctOption, explanation}]" },
+            { inlineData: { mimeType: file.type || "image/jpeg", data: base64Data } }
+          ]
+        }]
+      })
+    })
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: file.type || "image/jpeg"
-        }
-      }
-    ])
+    const data = await response.json()
 
-    const text = result.response.text().trim()
+    if (!response.ok) {
+      return NextResponse.json({ 
+        error: "Erro na API da Google", 
+        message: data.error?.message || "Erro desconhecido" 
+      }, { status: response.status })
+    }
+
+    const text = data.candidates[0].content.parts[0].text.trim()
     const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim()
     
     const questionsData = JSON.parse(cleanJson)
@@ -83,8 +76,9 @@ export async function POST(
     return NextResponse.json({ message: `${saved.length} questões importadas!` })
 
   } catch (error: any) {
+    console.error("[IMPORT_QUESTIONS_FATAL]", error)
     return NextResponse.json({ 
-      error: "Erro na conexão", 
+      error: "Erro no processamento", 
       message: error.message 
     }, { status: 500 })
   }
