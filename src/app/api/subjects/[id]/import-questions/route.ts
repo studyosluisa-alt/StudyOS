@@ -44,6 +44,23 @@ export async function POST(
     const data = await response.json()
 
     if (!response.ok) {
+      // SE DER ERRO, VAMOS PERGUNTAR AO GOOGLE QUAIS MODELOS ESTÃO DISPONÍVEIS
+      try {
+        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+        const listRes = await fetch(listUrl)
+        const listData = await listRes.json()
+        
+        if (listData && listData.models) {
+          const availableModels = listData.models.map((m: any) => m.name).join(', ')
+          return NextResponse.json({ 
+            error: "Modelo não encontrado. O Google informou que sua chave só tem acesso a estes modelos", 
+            message: availableModels 
+          }, { status: 500 })
+        }
+      } catch (listError) {
+        console.error("Erro ao listar modelos:", listError)
+      }
+
       return NextResponse.json({ 
         error: "Erro na API da Google (v1beta)", 
         message: data.error?.message || "Erro desconhecido" 
@@ -52,6 +69,7 @@ export async function POST(
 
     const text = data.candidates[0].content.parts[0].text.trim()
     const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim()
+
     
     const questionsData = JSON.parse(cleanJson)
 
