@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import { NextResponse } from "next/server"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
 export async function POST(
   req: Request,
@@ -23,53 +24,41 @@ export async function POST(
     const formData = await req.formData()
     const file = formData.get("file") as File
     const bytes = await file.arrayBuffer()
-    const base64Data = Buffer.from(bytes).toString("base64")
+    const buffer = Buffer.from(bytes)
+    const base64Data = buffer.toString("base64")
 
-    // TENTANDO V1BETA COM FETCH DIRETO
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+    const genAI = new GoogleGenerativeAI(apiKey)
     
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: "Extraia as questões de múltipla escolha desta prova em um array JSON: [{content, optionA, optionB, optionC, optionD, optionE, correctOption, explanation}]" },
-            { inlineData: { mimeType: file.type || "image/jpeg", data: base64Data } }
-          ]
-        }]
-      })
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      // SE DER ERRO, VAMOS PERGUNTAR AO GOOGLE QUAIS MODELOS ESTÃO DISPONÍVEIS
-      try {
-        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
-        const listRes = await fetch(listUrl)
-        const listData = await listRes.json()
-        
-        if (listData && listData.models) {
-          const availableModels = listData.models.map((m: any) => m.name).join(', ')
-          return NextResponse.json({ 
-            error: "Modelo não encontrado. O Google informou que sua chave só tem acesso a estes modelos", 
-            message: availableModels 
-          }, { status: 500 })
-        }
-      } catch (listError) {
-        console.error("Erro ao listar modelos:", listError)
+    // ATUALIZADO PARA O MODELO GEMINI 2.5 FLASH! (O 1.5 FOI APOSENTADO)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    
+    const prompt = `
+      Analise este documento de prova e extraia todas as questões de múltipla escolha.
+      Retorne APENAS um array JSON puro (sem markdown), contendo objetos com:
+      {
+        "content": "enunciado",
+        "optionA": "texto A",
+        "optionB": "texto B",
+        "optionC": "texto C",
+        "optionD": "texto D ou null",
+        "optionE": "texto E ou null",
+        "correctOption": "A, B, C, D ou E",
+        "explanation": "explicação curta"
       }
+    `
 
-      return NextResponse.json({ 
-        error: "Erro na API da Google (v1beta)", 
-        message: data.error?.message || "Erro desconhecido" 
-      }, { status: response.status })
-    }
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: file.type || "image/jpeg"
+        }
+      }
+    ])
 
-    const text = data.candidates[0].content.parts[0].text.trim()
+    const text = result.response.text().trim()
     const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim()
-
     
     const questionsData = JSON.parse(cleanJson)
 
@@ -91,11 +80,11 @@ export async function POST(
       )
     )
 
-    return NextResponse.json({ message: `${saved.length} questões importadas!` })
+    return NextResponse.json({ message: `${saved.length} questões importadas com sucesso!` })
 
   } catch (error: any) {
     return NextResponse.json({ 
-      error: "Erro no processamento", 
+      error: "Erro na conexão com a IA", 
       message: error.message 
     }, { status: 500 })
   }
