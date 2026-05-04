@@ -22,7 +22,9 @@ import {
   Sparkles,
   FileUp,
   Loader2,
-  RotateCcw
+  RotateCcw,
+  Pencil,
+  Trash2
 } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -88,6 +90,7 @@ export default function SubjectDetailsPage() {
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({})
 
   // Questions state
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null)
   const [questContent, setQuestContent] = useState("")
   const [optA, setOptA] = useState("")
   const [optB, setOptB] = useState("")
@@ -166,8 +169,13 @@ export default function SubjectDetailsPage() {
     }
 
     try {
-      const res = await fetch(`/api/subjects/${subjectId}/questions`, {
-        method: "POST",
+      const url = editingQuestionId 
+        ? `/api/questions/${editingQuestionId}`
+        : `/api/subjects/${subjectId}/questions`
+      const method = editingQuestionId ? "PUT" : "POST"
+
+      const res = await fetch(url, {
+        method,
         body: JSON.stringify({
           content: questContent,
           optionA: optA,
@@ -182,8 +190,9 @@ export default function SubjectDetailsPage() {
       })
 
       if (res.ok) {
-        toast.success("Questão adicionada!")
+        toast.success(editingQuestionId ? "Questão atualizada!" : "Questão adicionada!")
         setIsQuestionOpen(false)
+        setEditingQuestionId(null)
         setQuestContent("")
         setOptA("")
         setOptB("")
@@ -201,6 +210,34 @@ export default function SubjectDetailsPage() {
     } catch (e: any) {
       console.error("Erro na requisição:", e)
       toast.error("Erro ao salvar questão: " + e.message)
+    }
+  }
+
+  const handleEditQuestion = (q: Question) => {
+    setEditingQuestionId(q.id)
+    setQuestContent(q.content)
+    setOptA(q.optionA)
+    setOptB(q.optionB)
+    setOptC(q.optionC)
+    setOptD(q.optionD || "")
+    setOptE(q.optionE || "")
+    setCorrectOpt(q.correctOption)
+    setQuestExpl(q.explanation || "")
+    setIsQuestionOpen(true)
+  }
+
+  const handleDeleteQuestion = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta questão?")) return
+    try {
+      const res = await fetch(`/api/questions/${id}`, { method: "DELETE" })
+      if (res.ok) {
+        toast.success("Questão excluída!")
+        refreshData()
+      } else {
+        toast.error("Erro ao excluir questão")
+      }
+    } catch (e) {
+      toast.error("Erro na comunicação com servidor")
     }
   }
 
@@ -544,13 +581,26 @@ export default function SubjectDetailsPage() {
               </Dialog>
 
               <Dialog open={isQuestionOpen} onOpenChange={setIsQuestionOpen}>
-                <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 flex-1 bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-900/20">
+                <DialogTrigger 
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 flex-1 bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-900/20"
+                  onClick={() => {
+                    setEditingQuestionId(null)
+                    setQuestContent("")
+                    setOptA("")
+                    setOptB("")
+                    setOptC("")
+                    setOptD("")
+                    setOptE("")
+                    setCorrectOpt("A")
+                    setQuestExpl("")
+                  }}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Questão
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
                   <DialogHeader>
-                    <DialogTitle>Adicionar Questão Manual</DialogTitle>
+                    <DialogTitle>{editingQuestionId ? "Editar Questão" : "Adicionar Questão Manual"}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
@@ -603,7 +653,9 @@ export default function SubjectDetailsPage() {
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setIsQuestionOpen(false)}>Cancelar</Button>
-                    <Button onClick={handleAddQuestion} className="bg-orange-600 hover:bg-orange-700">Salvar Questão</Button>
+                    <Button onClick={handleAddQuestion} className="bg-orange-600 hover:bg-orange-700">
+                      {editingQuestionId ? "Salvar Alterações" : "Salvar Questão"}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -621,6 +673,14 @@ export default function SubjectDetailsPage() {
                   <CardHeader className="pb-3 bg-muted/10">
                     <div className="flex items-center justify-between mb-2">
                       <span className="bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">QUESTÃO #{idx + 1}</span>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-indigo-500" onClick={() => handleEditQuestion(q)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-500" onClick={() => handleDeleteQuestion(q.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="text-sm md:text-base font-semibold leading-relaxed whitespace-pre-wrap">
                       {q.content}
