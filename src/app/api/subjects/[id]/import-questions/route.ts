@@ -29,10 +29,23 @@ export async function POST(
 
     const genAI = new GoogleGenerativeAI(apiKey)
     
-    // TENTANDO O MODELO MAIS ESTÁVEL DE TODOS PARA IMAGENS
-    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" })
+    // USANDO O MODELO FLASH (REQUER CHAVE DO GOOGLE AI STUDIO EM NOVO PROJETO)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
     
-    const prompt = "Extraia as questões desta prova em formato JSON: [{content, optionA, optionB, optionC, optionD, optionE, correctOption, explanation}]"
+    const prompt = `
+      Analise este documento de prova e extraia todas as questões de múltipla escolha.
+      Retorne APENAS um array JSON puro (sem markdown), contendo objetos com:
+      {
+        "content": "enunciado",
+        "optionA": "texto A",
+        "optionB": "texto B",
+        "optionC": "texto C",
+        "optionD": "texto D ou null",
+        "optionE": "texto E ou null",
+        "correctOption": "A, B, C, D ou E",
+        "explanation": "explicação curta"
+      }
+    `
 
     const result = await model.generateContent([
       prompt,
@@ -67,7 +80,7 @@ export async function POST(
       )
     )
 
-    return NextResponse.json({ message: "Importado com sucesso!" })
+    return NextResponse.json({ message: `${saved.length} questões importadas!` })
 
   } catch (error: any) {
     return NextResponse.json({ 
