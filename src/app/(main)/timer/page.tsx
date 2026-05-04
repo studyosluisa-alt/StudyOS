@@ -11,7 +11,8 @@ import {
   BookOpen,
   TrendingUp,
   Clock,
-  Bell
+  Bell,
+  Loader2
 } from "lucide-react"
 import { 
   Select,
