@@ -15,7 +15,7 @@ export async function POST(
 
     const apiKey = process.env.GOOGLE_GEMINI_API_KEY
     if (!apiKey) {
-      return NextResponse.json({ error: "Chave da API (GOOGLE_GEMINI_API_KEY) não encontrada no servidor. Verifique as variáveis de ambiente na Vercel." }, { status: 500 })
+      return NextResponse.json({ error: "Chave da API não encontrada na Vercel." }, { status: 500 })
     }
 
     const resolvedParams = await params
@@ -27,57 +27,70 @@ export async function POST(
       return NextResponse.json({ error: "Nenhum arquivo enviado" }, { status: 400 })
     }
 
-    // Preparar IA
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" })
-
-    // Converter arquivo para base64
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
     const base64Data = buffer.toString("base64")
     const mimeType = file.type || "image/jpeg"
 
+    const genAI = new GoogleGenerativeAI(apiKey)
+    
+    // Lista de modelos para tentar (do mais novo para o mais compatível)
+    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro-vision"]
+    let lastError = ""
+    let result = null
+
     const prompt = `
       Analise este documento/imagem de prova e extraia todas as questões de múltipla escolha.
-      Retorne APENAS um array JSON puro, sem blocos de código markdown (sem \`\`\`json), contendo objetos com:
-      - content: enunciado
-      - optionA: texto da opção A
-      - optionB: texto da opção B
-      - optionC: texto da opção C
-      - optionD: texto da opção D ou null
-      - optionE: texto da opção E ou null
-      - correctOption: A, B, C, D ou E
-      - explanation: explicação curta
+      Retorne APENAS um array JSON puro, sem blocos de código markdown, contendo objetos com:
+      {
+        "content": "enunciado",
+        "optionA": "texto A",
+        "optionB": "texto B",
+        "optionC": "texto C",
+        "optionD": "texto D ou null",
+        "optionE": "texto E ou null",
+        "correctOption": "A, B, C, D ou E",
+        "explanation": "explicação curta"
+      }
     `
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: mimeType
-        }
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`Tentando modelo: ${modelName}...`)
+        const model = genAI.getGenerativeModel({ model: modelName })
+        result = await model.generateContent([
+          prompt,
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType
+            }
+          }
+        ])
+        if (result) break // Se funcionou, sai do loop
+      } catch (err: any) {
+        console.error(`Falha no modelo ${modelName}:`, err.message)
+        lastError = err.message
       }
-    ])
+    }
+
+    if (!result) {
+      return NextResponse.json({ 
+        error: "Todos os modelos de IA falharam", 
+        message: lastError 
+      }, { status: 500 })
+    }
 
     const text = result.response.text().trim()
-    
-    // Tentar limpar possíveis markdown se a IA ainda assim enviar
     const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim()
     
     let questionsData
     try {
       questionsData = JSON.parse(cleanJson)
     } catch (e) {
-      console.error("Erro no JSON da IA:", text)
-      return NextResponse.json({ error: "A IA gerou um formato inválido. Tente novamente com uma imagem mais nítida.", details: text }, { status: 500 })
+      return NextResponse.json({ error: "Formato de resposta inválido da IA.", details: text }, { status: 500 })
     }
 
-    if (!Array.isArray(questionsData)) {
-      return NextResponse.json({ error: "A IA não retornou uma lista de questões." }, { status: 500 })
-    }
-
-    // Salvar no banco
     const saved = await Promise.all(
       questionsData.map((q: any) => 
         prisma.question.create({
@@ -102,9 +115,9 @@ export async function POST(
     })
 
   } catch (error: any) {
-    console.error("[IMPORT_QUESTIONS_ERROR]", error)
+    console.error("[IMPORT_QUESTIONS_FATAL]", error)
     return NextResponse.json({ 
-      error: "Erro interno no servidor de IA", 
+      error: "Erro fatal no processamento", 
       message: error.message 
     }, { status: 500 })
   }
