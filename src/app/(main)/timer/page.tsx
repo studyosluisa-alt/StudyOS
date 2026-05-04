@@ -25,9 +25,14 @@ import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 
 export default function TimerPage() {
-  const [mode, setMode] = useState<"stopwatch" | "timer">("stopwatch")
+  const [mode, setMode] = useState<"stopwatch" | "timer" | "manual">("stopwatch")
   const [time, setTime] = useState(0) // time always stores ELAPSED time in seconds
   const [targetTime, setTargetTime] = useState(25 * 60) // Default 25 min Pomodoro
+  
+  // Manual mode state
+  const [manualHours, setManualHours] = useState(0)
+  const [manualMinutes, setManualMinutes] = useState(0)
+  const [manualDate, setManualDate] = useState(() => new Date().toISOString().split("T")[0])
   const [isRunning, setIsRunning] = useState(false)
   
   const [selectedSubject, setSelectedSubject] = useState<string>("")
@@ -51,7 +56,7 @@ export default function TimerPage() {
 
   // Load from localStorage
   useEffect(() => {
-    const savedMode = localStorage.getItem("study-timer-mode") as "stopwatch" | "timer" | null
+    const savedMode = localStorage.getItem("study-timer-mode") as "stopwatch" | "timer" | "manual" | null
     const savedTime = localStorage.getItem("study-timer-time")
     const savedTarget = localStorage.getItem("study-timer-target")
     const savedIsRunning = localStorage.getItem("study-timer-isRunning")
@@ -176,6 +181,46 @@ export default function TimerPage() {
     }
   }
 
+  const handleSaveManual = async () => {
+    const totalSeconds = (manualHours * 3600) + (manualMinutes * 60)
+    if (totalSeconds < 60) {
+      toast.error("O tempo de estudo deve ser de pelo menos 1 minuto.")
+      return
+    }
+    if (!selectedSubject) {
+      toast.error("Selecione uma matéria.")
+      return
+    }
+
+    try {
+      const start = new Date(manualDate + "T12:00:00") // rough estimate for the middle of the day
+      
+      const response = await fetch("/api/sessions", {
+        method: "POST",
+        body: JSON.stringify({
+          subjectId: selectedSubject,
+          startTime: start,
+          endTime: new Date(start.getTime() + totalSeconds * 1000),
+          duration: totalSeconds,
+          manual: true,
+          type: studyType,
+          scheduleReview: scheduleReview !== "0" ? parseInt(scheduleReview) : null
+        }),
+        headers: { "Content-Type": "application/json" }
+      })
+
+      if (response.ok) {
+        toast.success("Registro manual salvo com sucesso!")
+        setManualHours(0)
+        setManualMinutes(0)
+      } else {
+        toast.error("Erro ao salvar o registro manual.")
+      }
+    } catch (error) {
+      toast.error("Erro ao conectar com o servidor.")
+    }
+  }
+
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 md:space-y-8">
       <div className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -185,10 +230,11 @@ export default function TimerPage() {
 
       <Card className="w-full">
         <CardHeader className="text-center pb-2">
-           <Tabs value={mode} onValueChange={(v) => setMode(v as "stopwatch"|"timer")} className="w-full max-w-sm mx-auto">
-            <TabsList className="grid w-full grid-cols-2">
+           <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="w-full max-w-md mx-auto">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="stopwatch" disabled={isRunning}>Cronômetro</TabsTrigger>
               <TabsTrigger value="timer" disabled={isRunning}>Timer</TabsTrigger>
+              <TabsTrigger value="manual" disabled={isRunning}>Manual</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
@@ -214,9 +260,36 @@ export default function TimerPage() {
              </div>
           )}
 
-          <div className="text-6xl md:text-8xl font-mono font-bold tracking-tighter tabular-nums">
-            {formatTime(displaySeconds)}
-          </div>
+          {mode !== "manual" ? (
+            <div className="text-6xl md:text-8xl font-mono font-bold tracking-tighter tabular-nums">
+              {formatTime(displaySeconds)}
+            </div>
+          ) : (
+            <div className="flex gap-4 items-end mb-4 pt-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium opacity-70">Horas</label>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  value={manualHours} 
+                  onChange={e => setManualHours(parseInt(e.target.value) || 0)} 
+                  className="w-24 text-center text-2xl h-14 rounded-2xl" 
+                />
+              </div>
+              <div className="text-3xl font-bold pb-3 opacity-30">:</div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium opacity-70">Minutos</label>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  max="59" 
+                  value={manualMinutes} 
+                  onChange={e => setManualMinutes(parseInt(e.target.value) || 0)} 
+                  className="w-24 text-center text-2xl h-14 rounded-2xl" 
+                />
+              </div>
+            </div>
+          )}
 
           <div className="w-full max-w-md space-y-4 pt-4 border-t border-dashed">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -291,39 +364,63 @@ export default function TimerPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap justify-center items-center gap-4 mt-8">
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="h-16 w-16 rounded-full"
-              onClick={handleReset}
-            >
-              <RotateCcw className="h-6 w-6" />
-            </Button>
-            
-            <Button 
-              size="lg" 
-              className={`h-24 w-24 rounded-full shadow-lg transition-all active:scale-95 ${
-                isRunning ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
-              }`}
-              onClick={handleStartPause}
-            >
-              {isRunning ? (
-                <Pause className="h-10 w-10 text-white" />
-              ) : (
-                <Play className="h-10 w-10 text-white ml-1" />
-              )}
-            </Button>
+          <div className="w-full flex justify-center mt-8">
+            {mode !== "manual" ? (
+              <div className="flex flex-wrap justify-center items-center gap-4">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="h-16 w-16 rounded-full"
+                  onClick={handleReset}
+                >
+                  <RotateCcw className="h-6 w-6" />
+                </Button>
+                
+                <Button 
+                  size="lg" 
+                  className={`h-24 w-24 rounded-full shadow-lg transition-all active:scale-95 ${
+                    isRunning ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+                  }`}
+                  onClick={handleStartPause}
+                >
+                  {isRunning ? (
+                    <Pause className="h-10 w-10 text-white" />
+                  ) : (
+                    <Play className="h-10 w-10 text-white ml-1" />
+                  )}
+                </Button>
 
-            <Button 
-              size="lg" 
-              variant="default" 
-              className="h-16 w-16 rounded-full bg-blue-600 hover:bg-blue-700"
-              onClick={handleSave}
-              disabled={time === 0 || isRunning}
-            >
-              <Save className="h-6 w-6" />
-            </Button>
+                <Button 
+                  size="lg" 
+                  variant="default" 
+                  className="h-16 w-16 rounded-full bg-blue-600 hover:bg-blue-700"
+                  onClick={handleSave}
+                  disabled={time === 0 || isRunning}
+                >
+                  <Save className="h-6 w-6" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6 w-full max-w-md bg-muted/20 p-6 rounded-3xl border border-border/50">
+                <div className="space-y-2">
+                   <label className="text-sm font-medium">Data do Estudo</label>
+                   <Input 
+                     type="date" 
+                     className="h-12 rounded-xl"
+                     value={manualDate} 
+                     onChange={e => setManualDate(e.target.value)} 
+                   />
+                </div>
+                <Button 
+                  size="lg" 
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 h-14 rounded-xl text-base font-bold shadow-indigo-500/20 shadow-lg" 
+                  onClick={handleSaveManual}
+                >
+                  <Save className="h-5 w-5 mr-2" />
+                  Salvar Tempo Manual
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
