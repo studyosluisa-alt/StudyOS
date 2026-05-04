@@ -93,7 +93,8 @@ export default async function DashboardPage() {
   const pendingReviews = await prisma.review.findMany({
     where: { 
       completed: false,
-      dueDate: { lte: endOfToday }
+      dueDate: { lte: endOfToday },
+      subject: { userId }
     },
     include: { subject: true },
     orderBy: { dueDate: "asc" }
