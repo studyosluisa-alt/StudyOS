@@ -29,7 +29,7 @@ export async function POST(
 
     // Preparar IA
     const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" })
 
     // Converter arquivo para base64
     const bytes = await file.arrayBuffer()
