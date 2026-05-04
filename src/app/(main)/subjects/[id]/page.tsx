@@ -303,11 +303,9 @@ export default function SubjectDetailsPage({ params }: { params: Promise<{ id: s
               <p className="text-sm text-muted-foreground">PDFs, resumos e arquivos de estudo.</p>
             </div>
             <Dialog open={isMaterialOpen} onOpenChange={setIsMaterialOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-900/20">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Material
-                </Button>
+              <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-sky-600 text-primary-foreground shadow hover:bg-sky-700 shadow-lg shadow-sky-900/20">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Material
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
@@ -392,11 +390,9 @@ export default function SubjectDetailsPage({ params }: { params: Promise<{ id: s
               <p className="text-sm text-muted-foreground">Teste sua memória com flashcards ativos.</p>
             </div>
             <Dialog open={isFlashcardOpen} onOpenChange={setIsFlashcardOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-900/20">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Flashcard
-                </Button>
+              <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-indigo-600 text-primary-foreground shadow hover:bg-indigo-700 shadow-lg shadow-indigo-900/20">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Flashcard
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -477,11 +473,9 @@ export default function SubjectDetailsPage({ params }: { params: Promise<{ id: s
             <div className="flex gap-2 w-full md:w-auto">
               {/* Botão de Importação IA */}
               <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="flex-1 border-orange-500/30 hover:bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold group">
-                    <Sparkles className="h-4 w-4 mr-2 group-hover:animate-pulse" />
-                    Importar Prova IA
-                  </Button>
+                <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 flex-1 border border-orange-500/30 hover:bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold group">
+                  <Sparkles className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+                  Importar Prova IA
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -525,11 +519,9 @@ export default function SubjectDetailsPage({ params }: { params: Promise<{ id: s
               </Dialog>
 
               <Dialog open={isQuestionOpen} onOpenChange={setIsQuestionOpen}>
-                <DialogTrigger asChild>
-                  <Button className="flex-1 bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-900/20">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nova Questão
-                  </Button>
+                <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 flex-1 bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-900/20">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Questão
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
                   <DialogHeader>
