@@ -224,8 +224,9 @@ export default function SubjectDetailsPage({ params }: { params: Promise<{ id: s
         setImportFile(null)
         refreshData()
       } else {
-        // Exibe o erro específico vindo do backend
-        toast.error(data.error || data.message || "Erro ao importar questões")
+        // Exibe o erro específico + a mensagem técnica para diagnóstico
+        const fullError = data.message ? `${data.error}: ${data.message}` : data.error
+        toast.error(fullError || "Erro ao importar questões")
       }
     } catch (e: any) {
       toast.error("Ocorreu um erro na comunicação com o servidor")
