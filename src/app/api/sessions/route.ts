@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     return NextResponse.json(session);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return new NextResponse("Dados inválidos: " + error.errors[0].message, { status: 400 });
+      return new NextResponse("Dados inválidos: " + error.issues[0].message, { status: 400 });
     }
     console.error("[SESSIONS_POST]", error instanceof Error ? error.message : "Erro desconhecido");
     return new NextResponse("Internal Error", { status: 500 });

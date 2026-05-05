@@ -60,7 +60,7 @@ export async function PUT(
     return NextResponse.json(updated)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Dados inválidos: " + error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: "Dados inválidos: " + error.issues[0].message }, { status: 400 })
     }
     console.error("[QUESTION_UPDATE]", error instanceof Error ? error.message : "Erro desconhecido")
     return NextResponse.json({ error: "Erro ao atualizar questão" }, { status: 500 })

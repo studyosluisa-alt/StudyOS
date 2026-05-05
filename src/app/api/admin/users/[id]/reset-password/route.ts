@@ -31,7 +31,7 @@ export async function PATCH(
     return NextResponse.json({ message: "Senha atualizada com sucesso!" });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Senha inválida: " + error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: "Senha inválida: " + error.issues[0].message }, { status: 400 });
     }
     console.error("[ADMIN_PASSWORD_RESET_ERROR]:", error instanceof Error ? error.message : "Erro desconhecido");
     return NextResponse.json({ error: "Erro ao resetar senha" }, { status: 500 });
