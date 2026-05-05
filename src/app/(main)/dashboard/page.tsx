@@ -1,26 +1,34 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  BookOpen, 
-  Clock, 
-  TrendingUp, 
-  Calendar,
-  Bell
-} from "lucide-react";
+import { BookOpen, Clock, TrendingUp, Calendar } from "lucide-react";
 import { OverviewChart, DistributionChart } from "@/components/charts";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
+import { DashboardActions } from "@/components/dashboard/dashboard-actions";
+import { ReviewList } from "@/components/dashboard/review-list";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function DashboardPage(
+  props: { searchParams: Promise<{ period?: string }> }
+) {
   const session = await auth();
   if (!session?.user?.id) return null;
   const userId = session.user.id;
 
-  // Fetch real data
+  const searchParams = await props.searchParams;
+  const period = searchParams?.period || "week";
+
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+  
+  let startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+  if (period === "month") {
+    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+  } else if (period === "year") {
+    startDate = new Date(now.getFullYear(), 0, 1);
+  }
 
   // 1. Horas Hoje
   const todaySessions = await prisma.studySession.findMany({
@@ -48,46 +56,65 @@ export default async function DashboardPage() {
     data.duration += session.duration;
     dailyDistributionMap.set(session.subjectId, data);
   });
-  
   const dailyData = Array.from(dailyDistributionMap.values()).sort((a: any, b: any) => b.duration - a.duration);
 
-  // 2. Total da Semana
-  const weekSessions = await prisma.studySession.findMany({
+  // 2. Total do Período
+  const periodSessions = await prisma.studySession.findMany({
     where: { 
-      startTime: { gte: startOfWeek },
+      startTime: { gte: startDate },
       subject: { userId }
     },
     include: { subject: true }
   });
-  const weekSeconds = weekSessions.reduce((acc: number, s: any) => acc + (s.duration || 0), 0);
-  const hrsWeek = Math.floor(weekSeconds / 3600);
-  const minsWeek = Math.floor((weekSeconds % 3600) / 60);
+  const periodSeconds = periodSessions.reduce((acc: number, s: any) => acc + (s.duration || 0), 0);
+  const hrsPeriod = Math.floor(periodSeconds / 3600);
+  const minsPeriod = Math.floor((periodSeconds % 3600) / 60);
 
-  // 3. Matérias Ativas na Semana
-  const activeSubjectIds = new Set(weekSessions.map(s => s.subjectId));
+  // 3. Matérias Ativas no Período
+  const activeSubjectIds = new Set(periodSessions.map(s => s.subjectId));
   const activeSubjectsCount = activeSubjectIds.size;
 
-  // 4. Bar Chart Data (Last 7 Days)
-  const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const overviewDataMap = new Map();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-    overviewDataMap.set(d.toDateString(), { name: daysOfWeek[d.getDay()], total: 0 });
+  // 4. Bar Chart Data
+  const chartDataMap = new Map();
+  if (period === 'year') {
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    for (let i = 0; i <= now.getMonth(); i++) {
+      chartDataMap.set(i.toString(), { name: months[i], total: 0 });
+    }
+  } else {
+    const daysCount = period === 'month' ? 30 : 7;
+    for (let i = daysCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = d.toDateString();
+      const label = period === 'month' 
+        ? `${d.getDate()}/${d.getMonth()+1}` 
+        : ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d.getDay()];
+      chartDataMap.set(key, { name: label, total: 0 });
+    }
   }
   
-  weekSessions.forEach(session => {
-    const dateStr = session.startTime.toDateString();
-    if (overviewDataMap.has(dateStr)) {
-      const data = overviewDataMap.get(dateStr);
-      data.total += (session.duration / 3600); // Em horas
-      overviewDataMap.set(dateStr, data);
+  periodSessions.forEach(session => {
+    if (period === 'year') {
+      const m = session.startTime.getMonth().toString();
+      if (chartDataMap.has(m)) {
+        const data = chartDataMap.get(m);
+        data.total += (session.duration / 3600);
+        chartDataMap.set(m, data);
+      }
+    } else {
+      const dateStr = session.startTime.toDateString();
+      if (chartDataMap.has(dateStr)) {
+        const data = chartDataMap.get(dateStr);
+        data.total += (session.duration / 3600);
+        chartDataMap.set(dateStr, data);
+      }
     }
   });
-  const overviewData = Array.from(overviewDataMap.values()).map(d => ({...d, total: parseFloat(d.total.toFixed(1))}));
+  const overviewData = Array.from(chartDataMap.values()).map(d => ({...d, total: parseFloat(d.total.toFixed(1))}));
 
-  // 5. Pie Chart Data (Distribution)
+  // 5. Pie Chart Data
   const distributionMap = new Map();
-  weekSessions.forEach(session => {
+  periodSessions.forEach(session => {
     if (!distributionMap.has(session.subjectId)) {
       distributionMap.set(session.subjectId, {
         name: session.subject.name,
@@ -118,10 +145,13 @@ export default async function DashboardPage() {
     orderBy: { dueDate: "asc" }
   });
 
+  const periodLabel = period === "week" ? "da Semana" : period === "month" ? "do Mês" : "do Ano";
+
   return (
-    <div className="p-4 md:p-8 space-y-6 md:space-y-8">
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h2>
+        <DashboardActions />
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -132,9 +162,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{hrsToday.toString().padStart(2, '0')}:{minsToday.toString().padStart(2, '0')}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Foco contínuo e consistente
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Foco contínuo e consistente</p>
           </CardContent>
         </Card>
         
@@ -145,21 +173,19 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeSubjectsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Disciplinas estudadas na semana
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Disciplinas estudadas no período</p>
           </CardContent>
         </Card>
         
         <Card className="relative overflow-hidden border-indigo-500/20 bg-gradient-to-br from-card to-indigo-500/5 shadow-sm transition-all card-hover-effect cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total da Semana</CardTitle>
+            <CardTitle className="text-sm font-medium">Total {periodLabel}</CardTitle>
             <Calendar className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{hrsWeek}h {minsWeek}m</div>
+            <div className="text-2xl font-bold">{hrsPeriod}h {minsPeriod}m</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {weekSeconds > 0 ? "Você está em ritmo constante!" : "Vamos começar a estudar!"}
+              {periodSeconds > 0 ? "Ritmo constante!" : "Vamos começar?"}
             </p>
           </CardContent>
         </Card>
@@ -171,39 +197,15 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalDuration > 0 ? "Alta" : "Iniciando"}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Baseado no foco reportado
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Baseado no foco reportado</p>
           </CardContent>
         </Card>
       </div>
 
-      {pendingReviews.length > 0 && (
-        <div className="grid gap-4 grid-cols-1">
-          <Card className="shadow-sm border-amber-500/20 bg-gradient-to-r from-card to-amber-500/5 card-hover-effect cursor-pointer">
-            <CardHeader className="pb-2">
-              <CardTitle className="font-semibold text-lg flex items-center text-amber-600 dark:text-amber-500">
-                <Bell className="w-5 h-5 mr-2" />
-                Revisões Pendentes para Hoje
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-3">
-                {pendingReviews.map(review => (
-                  <div key={review.id} className="flex items-center gap-2 p-3 bg-background rounded-lg border shadow-sm">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: review.subject.color }} />
-                    <span className="font-medium text-sm">{review.subject.name}</span>
-                    <span className="text-xs text-muted-foreground ml-2">Agendado para {review.dueDate.toLocaleDateString('pt-BR')}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <ReviewList initialReviews={pendingReviews} />
 
       <div className="grid gap-4 grid-cols-1">
-        <Card className="shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10 card-hover-effect cursor-pointer">
+        <Card className="shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10">
           <CardHeader className="pb-4">
             <CardTitle className="font-semibold text-lg flex items-center">
               <Clock className="w-5 h-5 mr-2 text-primary" />
@@ -212,7 +214,14 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {dailyData.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum estudo registrado hoje ainda.</p>
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <p className="text-sm text-muted-foreground mb-4">Você ainda não registrou nenhum estudo hoje.</p>
+                <Link href="/timer">
+                  <Button variant="outline" className="text-indigo-600 border-indigo-200 hover:bg-indigo-50">
+                    Iniciar o Cronômetro
+                  </Button>
+                </Link>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {dailyData.map((d: any, i: number) => {
@@ -242,15 +251,15 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
-        <Card className="col-span-1 lg:col-span-4 shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10 card-hover-effect cursor-pointer">
+        <Card className="col-span-1 lg:col-span-4 shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10">
           <CardHeader>
-            <CardTitle className="font-semibold text-lg">Visão Geral (Semanal)</CardTitle>
+            <CardTitle className="font-semibold text-lg">Visão Geral ({periodLabel})</CardTitle>
           </CardHeader>
           <CardContent className="pl-0 sm:pl-2">
             <OverviewChart data={overviewData} />
           </CardContent>
         </Card>
-        <Card className="col-span-1 lg:col-span-3 shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10 card-hover-effect cursor-pointer">
+        <Card className="col-span-1 lg:col-span-3 shadow-sm border-border/50 bg-gradient-to-b from-card to-muted/10">
           <CardHeader>
             <CardTitle className="font-semibold text-lg">Distribuição por Matéria</CardTitle>
           </CardHeader>
