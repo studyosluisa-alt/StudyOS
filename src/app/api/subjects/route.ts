@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
+import { subjectSchema } from "@/lib/validations/subject";
+import { z } from "zod";
 
 export async function GET() {
   const session = await auth();
@@ -26,23 +28,22 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { name, color } = body;
-
-    if (!name) {
-      return new NextResponse("Name is required", { status: 400 });
-    }
+    const { name, color } = subjectSchema.parse(body);
 
     const subject = await prisma.subject.create({
       data: {
         name,
         userId,
-        color: color || "#3b82f6",
+        color,
       },
     });
 
     return NextResponse.json(subject);
   } catch (error) {
-    console.error("[SUBJECTS_POST]", error);
+    if (error instanceof z.ZodError) {
+      return new NextResponse("Dados inválidos", { status: 400 });
+    }
+    console.error("[SUBJECTS_POST]", error instanceof Error ? error.message : "Erro desconhecido");
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
