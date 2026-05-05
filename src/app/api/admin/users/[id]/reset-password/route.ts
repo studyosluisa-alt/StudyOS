@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth-utils";
+import { resetPasswordSchema } from "@/lib/validations/admin";
+import { z } from "zod";
 
 export async function PATCH(
   request: Request,
@@ -16,11 +18,8 @@ export async function PATCH(
 
   try {
     const { id } = await params;
-    const { newPassword } = await request.json();
-
-    if (!newPassword || newPassword.length < 6) {
-      return NextResponse.json({ error: "Senha muito curta (mínimo 6 caracteres)" }, { status: 400 });
-    }
+    const body = await request.json();
+    const { newPassword } = resetPasswordSchema.parse(body);
 
     const hashedPassword = await hashPassword(newPassword);
 
@@ -31,7 +30,10 @@ export async function PATCH(
 
     return NextResponse.json({ message: "Senha atualizada com sucesso!" });
   } catch (error) {
-    console.error("[ADMIN_PASSWORD_RESET_ERROR]:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Senha inválida: " + error.errors[0].message }, { status: 400 });
+    }
+    console.error("[ADMIN_PASSWORD_RESET_ERROR]:", error instanceof Error ? error.message : "Erro desconhecido");
     return NextResponse.json({ error: "Erro ao resetar senha" }, { status: 500 });
   }
 }

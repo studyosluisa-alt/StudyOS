@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
+import { sessionSchema } from "@/lib/validations/session";
+import { z } from "zod";
 
 export async function GET() {
   const session = await auth();
@@ -31,11 +33,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { subjectId, startTime, endTime, duration, manual, type, notes, scheduleReview } = body;
-
-    if (!subjectId || !startTime || !endTime || !duration) {
-      return new NextResponse("Missing required fields", { status: 400 });
-    }
+    const { subjectId, startTime, endTime, duration, manual, type, notes, scheduleReview } = sessionSchema.parse(body);
 
     // Verify ownership of the subject
     const subject = await prisma.subject.findFirst({
@@ -71,7 +69,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(session);
   } catch (error) {
-    console.error("[SESSIONS_POST]", error);
+    if (error instanceof z.ZodError) {
+      return new NextResponse("Dados inválidos: " + error.errors[0].message, { status: 400 });
+    }
+    console.error("[SESSIONS_POST]", error instanceof Error ? error.message : "Erro desconhecido");
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
