@@ -30,14 +30,35 @@ export default async function DashboardPage(
     startDate = new Date(now.getFullYear(), 0, 1);
   }
 
-  // 1. Horas Hoje
-  const todaySessions = await prisma.studySession.findMany({
-    where: { 
-      startTime: { gte: startOfToday },
-      subject: { userId }
-    },
-    include: { subject: true }
-  });
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+  // Executa todas as consultas ao banco em paralelo para melhorar a performance
+  const [todaySessions, periodSessions, pendingReviews] = await Promise.all([
+    prisma.studySession.findMany({
+      where: { 
+        startTime: { gte: startOfToday },
+        subject: { userId }
+      },
+      include: { subject: true }
+    }),
+    prisma.studySession.findMany({
+      where: { 
+        startTime: { gte: startDate },
+        subject: { userId }
+      },
+      include: { subject: true }
+    }),
+    prisma.review.findMany({
+      where: { 
+        completed: false,
+        dueDate: { lte: endOfToday },
+        subject: { userId }
+      },
+      include: { subject: true },
+      orderBy: { dueDate: "asc" }
+    })
+  ]);
+
   const todaySeconds = todaySessions.reduce((acc: number, s: any) => acc + (s.duration || 0), 0);
   const hrsToday = Math.floor(todaySeconds / 3600);
   const minsToday = Math.floor((todaySeconds % 3600) / 60);
@@ -59,13 +80,6 @@ export default async function DashboardPage(
   const dailyData = Array.from(dailyDistributionMap.values()).sort((a: any, b: any) => b.duration - a.duration);
 
   // 2. Total do Período
-  const periodSessions = await prisma.studySession.findMany({
-    where: { 
-      startTime: { gte: startDate },
-      subject: { userId }
-    },
-    include: { subject: true }
-  });
   const periodSeconds = periodSessions.reduce((acc: number, s: any) => acc + (s.duration || 0), 0);
   const hrsPeriod = Math.floor(periodSeconds / 3600);
   const minsPeriod = Math.floor((periodSeconds % 3600) / 60);
@@ -132,18 +146,6 @@ export default async function DashboardPage(
     ...d,
     value: totalDuration > 0 ? Math.round((d.value / totalDuration) * 100) : 0
   })).sort((a, b) => b.value - a.value);
-
-  // 6. Revisões Pendentes
-  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-  const pendingReviews = await prisma.review.findMany({
-    where: { 
-      completed: false,
-      dueDate: { lte: endOfToday },
-      subject: { userId }
-    },
-    include: { subject: true },
-    orderBy: { dueDate: "asc" }
-  });
 
   const periodLabel = period === "week" ? "da Semana" : period === "month" ? "do Mês" : "do Ano";
 

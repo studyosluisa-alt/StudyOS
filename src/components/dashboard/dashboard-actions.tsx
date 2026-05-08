@@ -1,46 +1,75 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Plus, Play } from "lucide-react";
+import { Plus, Play, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition, useEffect } from "react";
 
 export function DashboardActions() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPeriod = searchParams.get("period") || "week";
 
+  const [isPending, startTransition] = useTransition();
+  const [optimisticPeriod, setOptimisticPeriod] = useState<string | null>(null);
+
+  // Sincroniza o estado otimista quando o período real da URL muda
+  useEffect(() => {
+    setOptimisticPeriod(null);
+  }, [currentPeriod]);
+
   const handlePeriodChange = (period: string) => {
+    if (period === currentPeriod || isPending) return;
+    setOptimisticPeriod(period);
+
     const params = new URLSearchParams(searchParams);
     params.set("period", period);
-    router.push(`/dashboard?${params.toString()}`);
+
+    startTransition(() => {
+      router.push(`/dashboard?${params.toString()}`);
+    });
   };
+
+  const activePeriod = optimisticPeriod || currentPeriod;
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-stretch sm:items-center">
       <div className="flex bg-muted p-1 rounded-md">
         <Button 
-          variant={currentPeriod === "week" ? "default" : "ghost"} 
+          variant={activePeriod === "week" ? "default" : "ghost"} 
           size="sm" 
+          disabled={isPending}
           onClick={() => handlePeriodChange("week")}
-          className="text-xs"
+          className="text-xs min-w-[70px] transition-all duration-200"
         >
+          {isPending && optimisticPeriod === "week" && (
+            <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
+          )}
           Semana
         </Button>
         <Button 
-          variant={currentPeriod === "month" ? "default" : "ghost"} 
+          variant={activePeriod === "month" ? "default" : "ghost"} 
           size="sm" 
+          disabled={isPending}
           onClick={() => handlePeriodChange("month")}
-          className="text-xs"
+          className="text-xs min-w-[70px] transition-all duration-200"
         >
+          {isPending && optimisticPeriod === "month" && (
+            <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
+          )}
           Mês
         </Button>
         <Button 
-          variant={currentPeriod === "year" ? "default" : "ghost"} 
+          variant={activePeriod === "year" ? "default" : "ghost"} 
           size="sm" 
+          disabled={isPending}
           onClick={() => handlePeriodChange("year")}
-          className="text-xs"
+          className="text-xs min-w-[70px] transition-all duration-200"
         >
+          {isPending && optimisticPeriod === "year" && (
+            <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
+          )}
           Ano
         </Button>
       </div>
