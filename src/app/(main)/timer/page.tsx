@@ -31,8 +31,8 @@ export default function TimerPage() {
   const [targetTime, setTargetTime] = useState(25 * 60) // Default 25 min Pomodoro
   
   // Manual mode state
-  const [manualHours, setManualHours] = useState(0)
-  const [manualMinutes, setManualMinutes] = useState(0)
+  const [manualHours, setManualHours] = useState("0")
+  const [manualMinutes, setManualMinutes] = useState("0")
   const [manualDate, setManualDate] = useState(() => new Date().toISOString().split("T")[0])
   const [isRunning, setIsRunning] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -166,7 +166,7 @@ export default function TimerPage() {
           duration: time,
           manual: false,
           type: studyType,
-          scheduleReview: scheduleReview !== "0" ? parseInt(scheduleReview) : null
+          scheduleReview: scheduleReview !== "0" ? parseInt(scheduleReview) : undefined
         }),
         headers: { "Content-Type": "application/json" }
       })
@@ -187,7 +187,7 @@ export default function TimerPage() {
   }
 
   const handleSaveManual = async () => {
-    const totalSeconds = (manualHours * 3600) + (manualMinutes * 60)
+    const totalSeconds = (parseInt(manualHours || "0") * 3600) + (parseInt(manualMinutes || "0") * 60)
     if (totalSeconds < 60) {
       toast.error("O tempo de estudo deve ser de pelo menos 1 minuto.")
       return
@@ -210,15 +210,15 @@ export default function TimerPage() {
           duration: totalSeconds,
           manual: true,
           type: studyType,
-          scheduleReview: scheduleReview !== "0" ? parseInt(scheduleReview) : null
+          scheduleReview: scheduleReview !== "0" ? parseInt(scheduleReview) : undefined
         }),
         headers: { "Content-Type": "application/json" }
       })
 
       if (response.ok) {
         toast.success("Registro manual salvo com sucesso!")
-        setManualHours(0)
-        setManualMinutes(0)
+        setManualHours("0")
+        setManualMinutes("0")
       } else {
         toast.error("Erro ao salvar o registro manual.")
       }
@@ -280,7 +280,7 @@ export default function TimerPage() {
                   type="number" 
                   min="0" 
                   value={manualHours} 
-                  onChange={e => setManualHours(parseInt(e.target.value) || 0)} 
+                  onChange={e => setManualHours(e.target.value)} 
                   className="w-24 text-center text-2xl h-14 rounded-2xl" 
                 />
               </div>
@@ -292,7 +292,7 @@ export default function TimerPage() {
                   min="0" 
                   max="59" 
                   value={manualMinutes} 
-                  onChange={e => setManualMinutes(parseInt(e.target.value) || 0)} 
+                  onChange={e => setManualMinutes(e.target.value)} 
                   className="w-24 text-center text-2xl h-14 rounded-2xl" 
                 />
               </div>

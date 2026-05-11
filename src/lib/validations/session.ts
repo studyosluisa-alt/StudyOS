@@ -8,5 +8,5 @@ export const sessionSchema = z.object({
   manual: z.boolean().optional(),
   type: z.string().optional(),
   notes: z.string().optional(),
-  scheduleReview: z.union([z.string(), z.number()]).optional(),
+  scheduleReview: z.union([z.string(), z.number()]).nullable().optional(),
 });
