@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Download, Calendar as CalendarIcon, Trash2 } from "lucide-react"
+import { Plus, Download, Calendar as CalendarIcon, Trash2, Pencil } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
@@ -64,6 +64,16 @@ export default function HistoryPage() {
   const [manualType, setManualType] = useState("Estudo")
   const [scheduleReview, setScheduleReview] = useState("0")
 
+  // Edit Session State
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [currentEditingId, setCurrentEditingId] = useState<string | null>(null)
+  const [editSubject, setEditSubject] = useState("")
+  const [editDate, setEditDate] = useState("")
+  const [editHours, setEditHours] = useState("0")
+  const [editMins, setEditMins] = useState("0")
+  const [editType, setEditType] = useState("Estudo")
+  const [editOriginalManual, setEditOriginalManual] = useState(false)
+
   const fetchSessions = async () => {
     try {
       const response = await fetch("/api/sessions")
@@ -99,6 +109,63 @@ export default function HistoryPage() {
     const hrs = Math.floor(seconds / 3600)
     const mins = Math.floor((seconds % 3600) / 60)
     return `${hrs}h ${mins}m`
+  }
+
+  const handleOpenEdit = (session: Session) => {
+    setCurrentEditingId(session.id)
+    setEditSubject(session.subjectId)
+    setEditDate(format(session.startTime, "yyyy-MM-dd"))
+    const h = Math.floor(session.duration / 3600)
+    const m = Math.floor((session.duration % 3600) / 60)
+    setEditHours(h.toString())
+    setEditMins(m.toString())
+    setEditType(session.type || "Estudo")
+    setEditOriginalManual(session.manual)
+    setIsEditOpen(true)
+  }
+
+  const handleEditSubmit = async () => {
+    if (!currentEditingId || !editSubject || !editDate) {
+      toast.error("Preencha todos os campos.")
+      return
+    }
+    const h = parseInt(editHours) || 0
+    const m = parseInt(editMins) || 0
+    const totalSeconds = (h * 3600) + (m * 60)
+
+    if (totalSeconds === 0) {
+      toast.error("A duração não pode ser zero.")
+      return
+    }
+
+    const [year, month, day] = editDate.split("-").map(Number)
+    const dateObj = new Date(year, month - 1, day, 12, 0, 0)
+
+    try {
+      const response = await fetch(`/api/sessions/${currentEditingId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          subjectId: editSubject,
+          startTime: dateObj,
+          endTime: new Date(dateObj.getTime() + totalSeconds * 1000),
+          duration: totalSeconds,
+          manual: editOriginalManual,
+          type: editType,
+        }),
+        headers: { "Content-Type": "application/json" }
+      })
+
+      if (response.ok) {
+        toast.success("Estudo atualizado!")
+        setIsEditOpen(false)
+        fetchSessions()
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Erro ao atualizar");
+      }
+    } catch (error) {
+      toast.error("Erro de conexão")
+    }
   }
 
   const handleDeleteSession = async (id: string) => {
@@ -293,6 +360,68 @@ export default function HistoryPage() {
             </DialogContent>
           </Dialog>
 
+          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Editar Registro de Estudo</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Matéria</label>
+                  <Select onValueChange={(val) => setEditSubject(val || "")} value={editSubject}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma matéria">
+                        {editSubject ? subjects.find(s => s.id === editSubject)?.name : "Selecione"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjects.map(sub => (
+                        <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Data</label>
+                    <Input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Tipo de Estudo</label>
+                    <Select onValueChange={(val) => setEditType(val || "Estudo")} value={editType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Estudo">Estudo (Geral)</SelectItem>
+                        <SelectItem value="Leitura">Leitura</SelectItem>
+                        <SelectItem value="Vídeo Aula">Vídeo Aula</SelectItem>
+                        <SelectItem value="Atividades">Atividades / Exercícios</SelectItem>
+                        <SelectItem value="Revisão">Revisão</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Horas</label>
+                    <Input type="number" min="0" value={editHours} onChange={e => setEditHours(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Minutos</label>
+                    <Input type="number" min="0" max="59" value={editMins} onChange={e => setEditMins(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancelar</Button>
+                <Button onClick={handleEditSubmit}>Atualizar Registro</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
         </div>
       </div>
 
@@ -392,14 +521,24 @@ export default function HistoryPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8"
-                      onClick={() => handleDeleteSession(session.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-muted-foreground hover:text-primary hover:bg-muted h-8 w-8"
+                        onClick={() => handleOpenEdit(session)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                        onClick={() => handleDeleteSession(session.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
