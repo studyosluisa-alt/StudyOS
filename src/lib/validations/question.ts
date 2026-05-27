@@ -5,9 +5,9 @@ export const questionSchema = z.object({
   optionA: z.string().min(1, "Opção A é obrigatória"),
   optionB: z.string().min(1, "Opção B é obrigatória"),
   optionC: z.string().min(1, "Opção C é obrigatória"),
-  optionD: z.string().optional(),
-  optionE: z.string().optional(),
+  optionD: z.string().nullable().optional(),
+  optionE: z.string().nullable().optional(),
   correctOption: z.string().min(1, "Opção correta é obrigatória"),
-  explanation: z.string().optional(),
-  examName: z.string().optional(),
+  explanation: z.string().nullable().optional(),
+  examName: z.string().nullable().optional(),
 });

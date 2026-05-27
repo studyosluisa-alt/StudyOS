@@ -20,7 +20,7 @@ export async function POST(
 
     const resolvedParams = await params
     const subjectId = resolvedParams.id
-    
+
     const formData = await req.formData()
     const file = formData.get("file") as File
     let examName = formData.get("examName") as string | null
@@ -37,10 +37,10 @@ export async function POST(
     const mimeType = file.type || "image/jpeg"
 
     const genAI = new GoogleGenerativeAI(apiKey)
-    
+
     // LISTA DE MODELOS VÁLIDOS EM 2026 (Com fallback se um estiver lotado - Erro 503)
     const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]
-    
+
     const prompt = `
       Analise este documento de prova e extraia todas as questões de múltipla escolha.
       Retorne APENAS um array JSON puro (sem markdown), contendo objetos com:
@@ -73,7 +73,7 @@ export async function POST(
             }
           }
         ])
-        
+
         if (result) {
           console.log(`Sucesso com o modelo: ${modelName}`)
           break // Se deu certo, sai do loop
@@ -86,19 +86,19 @@ export async function POST(
     }
 
     if (!result) {
-      return NextResponse.json({ 
-        error: "Todos os modelos estão ocupados no momento. Tente novamente em alguns segundos.", 
-        message: lastError 
+      return NextResponse.json({
+        error: "Todos os modelos estão ocupados no momento. Tente novamente em alguns segundos.",
+        message: lastError
       }, { status: 503 })
     }
 
     const text = result.response.text().trim()
     const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim()
-    
+
     const questionsData = JSON.parse(cleanJson)
 
     const saved = await Promise.all(
-      questionsData.map((q: any) => 
+      questionsData.map((q: any) =>
         prisma.question.create({
           data: {
             content: q.content,
@@ -119,9 +119,9 @@ export async function POST(
     return NextResponse.json({ message: `${saved.length} questões importadas com sucesso!` })
 
   } catch (error: any) {
-    return NextResponse.json({ 
-      error: "Erro no processamento dos dados", 
-      message: error.message 
+    return NextResponse.json({
+      error: "Erro no processamento dos dados",
+      message: error.message
     }, { status: 500 })
   }
 }
