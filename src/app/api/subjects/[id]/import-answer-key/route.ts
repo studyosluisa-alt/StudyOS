@@ -83,11 +83,23 @@ As respostas devem ser uma letra entre A, B, C, D ou E.`
     const text = result.response.text().trim()
     const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim()
 
-    let answerKey: Array<{ question: number; answer: string }>
+    let answerKey: Array<{ question: number; answer: string }> = []
     try {
       answerKey = JSON.parse(cleanJson)
-    } catch (parseError: any) {
-      return NextResponse.json({ error: "Não foi possível interpretar o gabarito extraído.", message: parseError.message }, { status: 500 })
+    } catch {
+      // fallback para saída que não seja JSON puro
+      const regex = /(?<question>\d+)\D*(?<answer>[A-E])/gi
+      const fallback: Array<{ question: number; answer: string }> = []
+      let match
+      // eslint-disable-next-line no-cond-assign
+      while ((match = regex.exec(cleanJson))) {
+        const question = Number(match.groups?.question)
+        const answer = String(match.groups?.answer || "").toUpperCase().trim()
+        if (question && /^[A-E]$/.test(answer)) {
+          fallback.push({ question, answer })
+        }
+      }
+      answerKey = fallback
     }
 
     if (!Array.isArray(answerKey) || answerKey.length === 0) {
@@ -95,8 +107,8 @@ As respostas devem ser uma letra entre A, B, C, D ou E.`
     }
 
     const validAnswers = answerKey
-      .map((item) => ({ question: item.question, answer: String(item.answer || "").toUpperCase().trim() }))
-      .filter((item) => typeof item.question === "number" && /^[A-E]$/.test(item.answer))
+      .map((item) => ({ question: Number(item.question), answer: String(item.answer || "").toUpperCase().trim() }))
+      .filter((item) => Number.isInteger(item.question) && item.question > 0 && /^[A-E]$/.test(item.answer))
 
     if (validAnswers.length === 0) {
       return NextResponse.json({ error: "O gabarito extraído não contém respostas válidas." }, { status: 400 })
@@ -115,12 +127,16 @@ As respostas devem ser uma letra entre A, B, C, D ou E.`
     }
 
     const updates = await Promise.all(
-      validAnswers.slice(0, questions.length).map((item, index) =>
-        prisma.question.update({
-          where: { id: questions[index].id },
+      validAnswers.map(async (item) => {
+        const questionIndex = item.question - 1
+        if (questionIndex < 0 || questionIndex >= questions.length) {
+          return null
+        }
+        return prisma.question.update({
+          where: { id: questions[questionIndex].id },
           data: { correctOption: item.answer }
         })
-      )
+      })
     )
 
     return NextResponse.json({ message: `${updates.length} questões atualizadas com o gabarito.`, updatedCount: updates.length })
