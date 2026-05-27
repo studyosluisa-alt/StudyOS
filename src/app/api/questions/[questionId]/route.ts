@@ -53,7 +53,8 @@ export async function PUT(
         optionD: parsedBody.optionD,
         optionE: parsedBody.optionE,
         correctOption: parsedBody.correctOption,
-        explanation: parsedBody.explanation
+        explanation: parsedBody.explanation,
+        examName: parsedBody.examName || null
       }
     })
 

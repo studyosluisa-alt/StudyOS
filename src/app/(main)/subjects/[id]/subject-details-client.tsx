@@ -39,6 +39,7 @@ interface Question {
   optionE?: string
   correctOption: string
   explanation?: string
+  examName?: string | null
 }
 
 interface Material {
@@ -104,6 +105,15 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
   const [questExpl, setQuestExpl] = useState("")
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({})
   const [showResults, setShowResults] = useState<Record<string, boolean>>({})
+  const [importExamName, setImportExamName] = useState("")
+  const [questExamName, setQuestExamName] = useState("")
+  const [selectedExamFilter, setSelectedExamFilter] = useState("all")
+
+  const filteredQuestions = questions.filter(q => {
+    if (selectedExamFilter === "all") return true
+    if (selectedExamFilter === "Avulsas") return !q.examName
+    return q.examName === selectedExamFilter
+  })
 
   // Refresh data function to keep UI in sync
   const refreshData = async () => {
@@ -183,7 +193,8 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
           optionD: optD || null,
           optionE: optE || null,
           correctOption: correctOpt,
-          explanation: questExpl || null
+          explanation: questExpl || null,
+          examName: questExamName || null
         }),
         headers: { "Content-Type": "application/json" }
       })
@@ -200,6 +211,7 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
         setOptE("")
         setCorrectOpt("A")
         setQuestExpl("")
+        setQuestExamName("")
         refreshData()
       } else {
         const errorText = await res.text()
@@ -222,6 +234,7 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
     setOptE(q.optionE || "")
     setCorrectOpt(q.correctOption)
     setQuestExpl(q.explanation || "")
+    setQuestExamName(q.examName || "")
     setIsQuestionOpen(true)
   }
 
@@ -262,6 +275,9 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
     try {
       const formData = new FormData()
       formData.append("file", importFile)
+      if (importExamName) {
+        formData.append("examName", importExamName)
+      }
       
       const res = await fetch(`/api/subjects/${subjectId}/import-questions`, {
         method: "POST",
@@ -274,6 +290,7 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
         toast.success(data.message)
         setIsImportOpen(false)
         setImportFile(null)
+        setImportExamName("")
         refreshData()
       } else {
         // Exibe o erro específico + a mensagem técnica para diagnóstico
@@ -578,6 +595,16 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">PNG, JPG ou PDF (Máx 4MB)</p>
                     </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold opacity-50">NOME DA PROVA / SIMULADO (OPCIONAL)</label>
+                      <Input
+                        placeholder="Ex: ENEM 2025 (Padrão: nome do arquivo)"
+                        value={importExamName}
+                        onChange={(e) => setImportExamName(e.target.value)}
+                        className="rounded-xl"
+                      />
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button variant="ghost" onClick={() => setIsImportOpen(false)} disabled={isImporting}>Cancelar</Button>
@@ -606,6 +633,7 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
                     setOptE("")
                     setCorrectOpt("A")
                     setQuestExpl("")
+                    setQuestExamName("")
                   }}
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -663,6 +691,11 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
                       <label className="text-xs font-bold opacity-50">EXPLICAÇÃO (OPCIONAL)</label>
                       <Input value={questExpl} onChange={e => setQuestExpl(e.target.value)} placeholder="Comentários sobre a resposta..." className="rounded-xl" />
                     </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold opacity-50">PROVA / SIMULADO (OPCIONAL)</label>
+                      <Input value={questExamName} onChange={e => setQuestExamName(e.target.value)} placeholder="Ex: ENEM 2025" className="rounded-xl" />
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setIsQuestionOpen(false)}>Cancelar</Button>
@@ -675,8 +708,72 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
             </div>
           </div>
 
+          {/* Filtros de Prova */}
+          {questions.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2 pb-4">
+              <button
+                onClick={() => setSelectedExamFilter("all")}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shrink-0 ${
+                  selectedExamFilter === "all"
+                    ? "bg-orange-600 border-orange-600 text-white shadow-md shadow-orange-900/20"
+                    : "bg-muted/30 border-border/40 text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Todas ({questions.length})
+              </button>
+              {Array.from(new Set(questions.map(q => q.examName || "Avulsas"))).map(exam => {
+                const countNum = questions.filter(q => (q.examName || "Avulsas") === exam).length
+                return (
+                  <div 
+                    key={exam} 
+                    onClick={() => setSelectedExamFilter(exam)}
+                    className={`flex items-center gap-2 pl-4 pr-2 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                      selectedExamFilter === exam
+                        ? "bg-orange-600/10 border-orange-500/30 text-orange-500"
+                        : "bg-muted/30 border-border/40 text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span>
+                      {exam} ({countNum})
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10 shrink-0"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        if (confirm(`Tem certeza que deseja excluir todas as ${countNum} questões da prova "${exam}"?`)) {
+                          try {
+                            const res = await fetch(`/api/subjects/${subjectId}/questions?examName=${encodeURIComponent(exam === "Avulsas" ? "" : exam)}`, { method: "DELETE" })
+                            if (res.ok) {
+                              toast.success(`Questões da prova "${exam}" excluídas!`)
+                              setSelectedExamFilter("all")
+                              refreshData()
+                            } else {
+                              toast.error("Erro ao excluir questões da prova")
+                            }
+                          } catch (err) {
+                            toast.error("Erro na comunicação com o servidor")
+                          }
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
           <div className="space-y-6 pt-4">
-            {questions.map((q, idx) => {
+            {questions.length > 0 && filteredQuestions.length === 0 && (
+              <div className="py-16 text-center text-muted-foreground bg-muted/10 border-2 border-dashed rounded-3xl">
+                <p className="font-semibold">Nenhuma questão encontrada para este filtro.</p>
+              </div>
+            )}
+            {filteredQuestions.map((q) => {
+              const absoluteIdx = questions.findIndex(orig => orig.id === q.id)
               const selected = userAnswers[q.id]
               const showResult = showResults[q.id]
               const isCorrect = selected === q.correctOption
@@ -685,7 +782,7 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
                 <Card key={q.id} className="border-l-4 border-l-orange-500 shadow-sm hover:shadow-md transition-all overflow-hidden bg-card/50 backdrop-blur-sm">
                   <CardHeader className="pb-3 bg-muted/10">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">QUESTÃO #{idx + 1}</span>
+                      <span className="bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">QUESTÃO #{absoluteIdx + 1}</span>
                       <div className="flex gap-2">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-indigo-500" onClick={() => handleEditQuestion(q)}>
                           <Pencil className="h-4 w-4" />

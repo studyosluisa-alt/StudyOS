@@ -72,6 +72,7 @@ model Question {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   subjectId     String   @db.ObjectId
   subject       Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  examName      String?
   content       String
   optionA       String
   optionB       String

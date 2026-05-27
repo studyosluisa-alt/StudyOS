@@ -10,7 +10,7 @@ export async function POST(
     const { id } = await params;
     const body = await request.json();
     
-    const { content, optionA, optionB, optionC, optionD, optionE, correctOption, explanation } = body;
+    const { content, optionA, optionB, optionC, optionD, optionE, correctOption, explanation, examName } = body;
 
     if (!content || !optionA || !optionB || !optionC || !correctOption) {
       console.error("[QUESTIONS_POST] Missing fields");
@@ -20,6 +20,7 @@ export async function POST(
     const question = await prisma.question.create({
       data: {
         subjectId: id,
+        examName: examName || null,
         content,
         optionA,
         optionB,
@@ -62,14 +63,28 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Delete all questions associated with this subject
-    await prisma.question.deleteMany({
-      where: { 
-        subjectId: id 
-      }
-    });
+    const url = new URL(request.url);
+    const examName = url.searchParams.get("examName");
 
-    return NextResponse.json({ message: "Todas as questões foram excluídas com sucesso" });
+    if (examName !== null) {
+      // Se for a string vazia "", corresponde às Avulsas (null)
+      const targetExam = examName === "" ? null : examName;
+      await prisma.question.deleteMany({
+        where: { 
+          subjectId: id,
+          examName: targetExam
+        }
+      });
+    } else {
+      // Deleta todas as questões associadas a esta matéria
+      await prisma.question.deleteMany({
+        where: { 
+          subjectId: id 
+        }
+      });
+    }
+
+    return NextResponse.json({ message: "Questões excluídas com sucesso" });
   } catch (error: any) {
     console.error("[QUESTIONS_DELETE_MANY] Error:", error);
     return NextResponse.json({ error: error.message || "Erro interno" }, { status: 500 });

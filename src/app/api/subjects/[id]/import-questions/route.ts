@@ -23,6 +23,14 @@ export async function POST(
     
     const formData = await req.formData()
     const file = formData.get("file") as File
+    let examName = formData.get("examName") as string | null
+
+    if (!examName && file) {
+      const dotIndex = file.name.lastIndexOf(".")
+      const rawName = dotIndex !== -1 ? file.name.substring(0, dotIndex) : file.name
+      examName = rawName.replace(/[_-]/g, " ").trim()
+    }
+
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
     const base64Data = buffer.toString("base64")
@@ -101,7 +109,8 @@ export async function POST(
             optionE: q.optionE || null,
             correctOption: q.correctOption || "A",
             explanation: q.explanation || null,
-            subjectId: subjectId
+            subjectId: subjectId,
+            examName: examName || null
           }
         })
       )
