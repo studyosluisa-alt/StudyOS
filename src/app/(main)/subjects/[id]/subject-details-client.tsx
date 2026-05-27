@@ -87,6 +87,10 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
   const [isUploading, setIsUploading] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [importFile, setImportFile] = useState<File | null>(null)
+  const [isAnswerKeyOpen, setIsAnswerKeyOpen] = useState(false)
+  const [answerKeyFile, setAnswerKeyFile] = useState<File | null>(null)
+  const [answerKeyExam, setAnswerKeyExam] = useState("")
+  const [isApplyingAnswerKey, setIsApplyingAnswerKey] = useState(false)
   
   // Flashcards state
   const [cardQ, setCardQ] = useState("")
@@ -108,6 +112,7 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
   const [importExamName, setImportExamName] = useState("")
   const [questExamName, setQuestExamName] = useState("")
   const [selectedExamFilter, setSelectedExamFilter] = useState("all")
+  const availableExamNames = Array.from(new Set(questions.map(q => q.examName).filter(Boolean))) as string[]
 
   const filteredQuestions = questions.filter(q => {
     if (selectedExamFilter === "all") return true
@@ -301,6 +306,40 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
       toast.error("Ocorreu um erro na comunicação com o servidor")
     } finally {
       setIsImporting(false)
+    }
+  }
+
+  const handleApplyAnswerKey = async () => {
+    if (!answerKeyFile) return toast.error("Selecione o gabarito oficial")
+    if (!answerKeyExam) return toast.error("Selecione a prova alvo")
+
+    setIsApplyingAnswerKey(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", answerKeyFile)
+      formData.append("examName", answerKeyExam)
+
+      const res = await fetch(`/api/subjects/${subjectId}/import-answer-key`, {
+        method: "POST",
+        body: formData
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success(data.updatedCount > 0 ? `${data.updatedCount} questões atualizadas com o gabarito!` : "Nenhuma questão encontrada para essa prova.")
+        setIsAnswerKeyOpen(false)
+        setAnswerKeyFile(null)
+        setAnswerKeyExam("")
+        refreshData()
+      } else {
+        const fullError = data.message ? `${data.error}: ${data.message}` : data.error
+        toast.error(fullError || "Erro ao aplicar gabarito")
+      }
+    } catch (e: any) {
+      toast.error("Erro na comunicação com o servidor")
+    } finally {
+      setIsApplyingAnswerKey(false)
     }
   }
 
@@ -619,6 +658,67 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+
+              {availableExamNames.length > 0 && (
+                <Dialog open={isAnswerKeyOpen} onOpenChange={setIsAnswerKeyOpen}>
+                  <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 flex-1 border border-sky-500/30 hover:bg-sky-500/10 text-sky-600 dark:text-sky-400 font-bold group">
+                    <ClipboardCheck className="h-4 w-4 mr-2" />
+                    Importar Gabarito
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <ClipboardCheck className="h-5 w-5 text-sky-500" />
+                        Importar Gabarito Oficial
+                      </DialogTitle>
+                      <DialogDescription>
+                        Selecione a prova alvo e suba o arquivo do gabarito para corrigir automaticamente as questões importadas.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold opacity-50">Prova alvo</label>
+                        <select
+                          value={answerKeyExam}
+                          onChange={(e) => setAnswerKeyExam(e.target.value)}
+                          className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                        >
+                          <option value="">Selecione uma prova</option>
+                          {availableExamNames.map((exam) => (
+                            <option key={exam} value={exam}>{exam}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold opacity-50">Arquivo do gabarito</label>
+                        <div className="border-2 border-dashed rounded-2xl p-6 text-center hover:border-sky-500/50 transition-colors cursor-pointer relative">
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={(e) => setAnswerKeyFile(e.target.files?.[0] || null)}
+                          />
+                          <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-xs text-muted-foreground">
+                            {answerKeyFile ? answerKeyFile.name : "Clique ou arraste o gabarito oficial"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="ghost" onClick={() => setIsAnswerKeyOpen(false)} disabled={isApplyingAnswerKey}>Cancelar</Button>
+                      <Button 
+                        onClick={handleApplyAnswerKey} 
+                        disabled={isApplyingAnswerKey || !answerKeyFile || !answerKeyExam}
+                        className="bg-sky-600 hover:bg-sky-700"
+                      >
+                        {isApplyingAnswerKey ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                        {isApplyingAnswerKey ? "Aplicando gabarito..." : "Aplicar Gabarito"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
 
               <Dialog open={isQuestionOpen} onOpenChange={setIsQuestionOpen}>
                 <DialogTrigger 
