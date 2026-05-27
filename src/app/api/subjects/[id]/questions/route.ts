@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 
 export async function POST(
@@ -33,6 +34,44 @@ export async function POST(
     return NextResponse.json(question);
   } catch (error: any) {
     console.error("[QUESTIONS_POST] Error:", error);
+    return NextResponse.json({ error: error.message || "Erro interno" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+
+    // Verify ownership of the subject before deleting questions
+    const subject = await prisma.subject.findFirst({
+      where: { 
+        id, 
+        userId: session.user.id 
+      }
+    });
+
+    if (!subject) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Delete all questions associated with this subject
+    await prisma.question.deleteMany({
+      where: { 
+        subjectId: id 
+      }
+    });
+
+    return NextResponse.json({ message: "Todas as questões foram excluídas com sucesso" });
+  } catch (error: any) {
+    console.error("[QUESTIONS_DELETE_MANY] Error:", error);
     return NextResponse.json({ error: error.message || "Erro interno" }, { status: 500 });
   }
 }

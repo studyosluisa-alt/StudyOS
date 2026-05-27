@@ -240,6 +240,21 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
     }
   }
 
+  const handleDeleteAllQuestions = async () => {
+    if (!confirm("Tem certeza que deseja excluir todas as questões desta matéria? Esta ação é irreversível e não pode ser desfeita!")) return
+    try {
+      const res = await fetch(`/api/subjects/${subjectId}/questions`, { method: "DELETE" })
+      if (res.ok) {
+        toast.success("Todas as questões foram excluídas!")
+        refreshData()
+      } else {
+        toast.error("Erro ao excluir todas as questões")
+      }
+    } catch (e) {
+      toast.error("Erro na comunicação com o servidor")
+    }
+  }
+
   const handleImportQuestions = async () => {
     if (!importFile) return toast.error("Selecione um arquivo de prova")
     
@@ -518,6 +533,18 @@ export function SubjectDetailsClient({ initialSubjectData }: { initialSubjectDat
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Refazer
               </Button>
+
+              {/* Botão de Excluir Todos */}
+              {questions.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleDeleteAllQuestions}
+                  className="h-9 px-4 py-2 border-red-500/30 hover:bg-red-500/10 text-red-600 dark:text-red-400 font-medium"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir Todas
+                </Button>
+              )}
 
               {/* Botão de Importação IA */}
               <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
